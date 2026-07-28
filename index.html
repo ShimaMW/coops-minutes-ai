@@ -1,571 +1,482 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>COOPs 担当者会議議事録AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --bg: #374151;
-      --card: #ffffff;
-      --card-sub: #f8fafc;
-      --clover: #354045;
-      --clover-h: #2a3338;
-      --clover-dim: rgba(53, 64, 69, 0.08);
-      --clover-mid: rgba(53, 64, 69, 0.18);
-      --border: #e2e8f0;
-      --border-mid: #cbd5e1;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --danger: #ef4444;
-      --success: #10b981;
-      --amber: #f59e0b;
-      --blue: #3b82f6;
-      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.18);
-      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.22);
-      --r-sm: 8px;
-      --r-md: 12px;
-      --r-lg: 20px;
-      --t: 0.18s ease;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      width: 100%;
-      overflow-x: hidden;
-    }
-
-    .msym {
-      font-family: 'Material Symbols Outlined';
-      font-size: 20px;
-      line-height: 1;
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    /* ─── Loading ─── */
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(55, 65, 81, 0.92);
-      backdrop-filter: blur(6px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      transition: opacity 0.3s;
-    }
-    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
-    .loader-ring {
-      width: 52px; height: 52px;
-      border: 3px solid rgba(255, 255, 255, 0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { color: rgba(255, 255, 255, 0.8); font-size: 0.88rem; }
-
-    /* ─── Toast ─── */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--card); border-radius: var(--r-md);
-      padding: 11px 24px; font-size: 0.85rem; font-weight: 600;
-      box-shadow: var(--shadow-lg); z-index: 8000;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      pointer-events: none;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); }
-    #toast.success { color: var(--success); border-left: 4px solid var(--success); }
-    #toast.error { color: var(--danger); border-left: 4px solid var(--danger); }
-
-    /* ─── App Shell ─── */
-    .app-shell {
-      width: 100%; max-width: 860px;
-      margin: 0 auto; padding: 20px 14px 60px;
-    }
-
-    .app-header {
-      background: var(--clover); color: #fff;
-      padding: 14px 20px; border-radius: var(--r-lg);
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px; box-shadow: var(--shadow-md);
-    }
-    .app-header h1 { font-size: 1.05rem; font-weight: 700; }
-    .app-header p { font-size: 0.72rem; color: rgba(255, 255, 255, 0.65); }
-
-    .tabs { display: flex; gap: 4px; }
-    .tab-btn {
-      flex: 1; padding: 11px 8px; border: none;
-      background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.65);
-      font-family: inherit; font-size: 0.85rem; font-weight: 500;
-      cursor: pointer; border-radius: var(--r-sm) var(--r-sm) 0 0;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all var(--t);
-    }
-    .tab-btn.active { background: var(--card); color: var(--clover); font-weight: 700; }
-
-    .tab-content {
-      display: none; background: var(--card);
-      border-radius: 0 0 var(--r-lg) var(--r-lg);
-      padding: 24px 22px; box-shadow: var(--shadow-lg);
-    }
-    .tab-content.active { display: block; }
-
-    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-    .form-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
-    .form-row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-bottom: 14px; }
-
-    input[type=text], input[type=date], textarea {
-      width: 100%; background: var(--card-sub);
-      border: 1px solid var(--border); border-radius: var(--r-sm);
-      color: var(--text); font-family: inherit; font-size: 0.95rem;
-      padding: 10px 12px; outline: none; transition: border var(--t);
-    }
-    input[type=text]:focus, input[type=date]:focus, textarea:focus {
-      border-color: var(--clover);
-    }
-    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
-
-    .audio-card {
-      border: 2px dashed var(--border-mid); border-radius: var(--r-md);
-      padding: 18px 14px; text-align: center; cursor: pointer;
-      background: var(--card-sub); transition: all var(--t);
-      margin-bottom: 14px;
-    }
-    .audio-card:hover { border-color: var(--clover); background: var(--clover-dim); }
-    .audio-card.active-audio { border-color: var(--clover); border-style: solid; background: var(--clover-dim); }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-      padding: 10px 20px; border-radius: var(--r-sm); border: none;
-      cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 700;
-      transition: all var(--t);
-    }
-    .btn-primary { background: var(--clover); color: #fff; }
-    .btn-primary:hover { background: var(--clover-h); }
-    .btn-secondary { background: var(--card-sub); color: var(--text); border: 1px solid var(--border); }
-    .btn-amber { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
-
-    .section-card {
-      background: var(--card-sub); border: 1px solid var(--border);
-      border-left: 4px solid var(--clover); border-radius: var(--r-md);
-      padding: 14px 16px; margin-bottom: 12px;
-    }
-    .section-title { font-size: 0.9rem; font-weight: 700; color: var(--clover); margin-bottom: 6px; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th { background: var(--clover); color: #fff; padding: 10px 12px; text-align: left; }
-    td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
-    tr:hover td { background: var(--clover-dim); }
-
-    .tbl-btn {
-      padding: 4px 10px; border-radius: 6px; font-size: 0.72rem;
-      font-weight: 600; border: 1px solid var(--clover); background: #fff;
-      color: var(--clover); cursor: pointer;
-    }
-    .tbl-btn:hover { background: var(--clover-dim); }
-
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; z-index: 7000;
-      background: rgba(45, 55, 72, 0.72); backdrop-filter: blur(4px);
-      align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-box {
-      background: var(--card); border-radius: var(--r-lg);
-      width: 100%; max-width: 760px; margin: auto; padding: 24px;
-      box-shadow: var(--shadow-lg);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-    .modal-title { font-size: 1rem; font-weight: 700; color: var(--clover); }
-    .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); }
-
-    .action-row { display: flex; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-    .hidden { display: none !important; }
-
-    @media (max-width: 480px) {
-      .form-row { grid-template-columns: 1fr; }
-      .btn { width: 100%; }
-    }
-  </style>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>COOPs 担当者会議議事録AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        coopsBg: "#374151", 
+                        coopsCard: "#ffffff",
+                        clover: "#354045"
+                    }, 
+                    fontFamily: { sans: ['"Noto Sans JP"', 'sans-serif'] } 
+                } 
+            } 
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #374151; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        .sidebar-open { transform: translateX(0%); }
+        .sidebar-closed { transform: translateX(-100%); }
+    </style>
 </head>
+<body class="text-slate-800 bg-coopsBg h-[100dvh] overflow-hidden flex flex-col">
 
-<body>
-
-  <div id="loadingOverlay">
-    <div class="loader-ring"></div>
-    <div class="loader-text" id="loadingText">データを読み込んでいます...</div>
-  </div>
-
-  <div id="toast"></div>
-
-  <div class="app-shell">
-
-    <header class="app-header">
-      <div>
-        <h1>COOPs 担当者会議議事録AI</h1>
-        <p>サービス担当者会議 議事録自動作成アシスタント</p>
-      </div>
-      <button class="btn btn-secondary" style="font-size:0.75rem; padding:4px 10px;" onclick="openModal('settingsModal')">
-        <span class="msym" style="font-size:16px;">settings</span>設定
-      </button>
+    <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md z-30 shrink-0 border-b border-slate-700">
+        <button onclick="toggleSidebar()" class="flex items-center justify-center p-1 rounded hover:bg-slate-600 transition" title="メニューを開く">
+            <span class="material-symbols-outlined text-3xl">menu</span>
+        </button>
+        <div class="flex items-center gap-3">
+            <img src="data:image/png;base64,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 subterranean" alt="COOPs" class="h-6 md:h-8 object-contain">
+            <span class="font-bold text-sm md:text-base border-l border-slate-500 pl-3 text-slate-300">担当者会議AI議事録</span>
+        </div>
+        <button onclick="openSettingsModal()" class="flex items-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded transition text-slate-200">
+            <span class="material-symbols-outlined text-sm">settings</span>設定
+        </button>
     </header>
 
-    <nav class="tabs">
-      <button class="tab-btn active" onclick="switchTab('create')" id="tab-btn-create">
-        <span class="msym" style="font-size:17px;">edit_note</span>議事録作成
-      </button>
-      <button class="tab-btn" onclick="switchTab('history')" id="tab-btn-history">
-        <span class="msym" style="font-size:17px;">table_view</span>過去ログ一覧
-      </button>
-    </nav>
-
-    <!-- ══ TAB: 作成 ══ -->
-    <div id="tab-create" class="tab-content active">
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">📅 会議開催日</label>
-          <input type="date" id="meetingDate">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity" onclick="toggleSidebar()"></div>
+    
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-slate-50 flex flex-col transition-transform duration-300 sidebar-closed shadow-2xl shrink-0">
+        <div class="p-4 border-b border-slate-200 bg-slate-800 text-white flex items-center gap-3 shrink-0">
+            <span class="material-symbols-outlined text-xl">auto_stories</span>
+            <h2 class="font-bold">データベースから呼出</h2>
+            <button onclick="toggleSidebar()" class="ml-auto flex items-center p-1 rounded hover:bg-slate-600 transition" title="閉じる">
+                <span class="material-symbols-outlined">close</span>
+            </button>
         </div>
-        <div class="form-group">
-          <label class="form-label">👤 対象利用者名</label>
-          <input type="text" id="clientName" placeholder="例：山田 太郎 様">
+        
+        <div class="p-3 bg-slate-100 border-b border-slate-200 shrink-0 space-y-2">
+            <div class="flex justify-between items-center">
+                <p class="text-xs font-bold text-slate-500">保存済みデータ</p>
+                <button onclick="loadHistory()" class="text-clover hover:bg-slate-200 p-1 rounded-full transition flex items-center" title="最新の情報に更新">
+                    <span class="material-symbols-outlined text-sm">refresh</span>
+                </button>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-2 top-2 text-slate-400 text-lg">search</span>
+                <input type="text" id="searchInput" onkeyup="filterHistory()" placeholder="名前や日付で検索..." class="w-full pl-8 p-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-clover outline-none">
+            </div>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">📝 メモ・テキスト起こしデータ</label>
-        <textarea id="inputText" placeholder="会議中のメモや発言内容、議題のテキストを入力してください。"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">🎙️ 録音音声ファイル（任意）</label>
-        <div class="audio-card" id="uploadCard" onclick="document.getElementById('fileInput').click()">
-          <div style="font-size:1.8rem; margin-bottom:4px;">🗂️</div>
-          <div style="font-size:0.85rem; font-weight:600;">音声ファイルを選択 (.mp3, .m4a, .wav等)</div>
-          <div id="uploadStatus" style="font-size:0.75rem; color:var(--success); margin-top:4px;" class="hidden"></div>
-          <input type="file" id="fileInput" accept="audio/*" onchange="handleUploadFile(event)" style="display:none;">
+        
+        <div id="historyList" class="flex-1 overflow-y-auto p-3 space-y-3">
+            <div class="text-center text-slate-400 text-sm mt-5">読み込み中...</div>
         </div>
-      </div>
+    </aside>
 
-      <div style="text-align:center; margin-top:18px;">
-        <button class="btn btn-primary" onclick="runGenerateMinutes()" style="min-width:220px;">
-          <span class="msym" style="font-size:18px;">auto_awesome</span>AI議事録を生成する
-        </button>
-      </div>
+    <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative w-full p-2 md:p-4 gap-2 md:gap-4">
+        
+        <main class="w-full md:flex-1 md:overflow-y-auto bg-coopsCard rounded-xl shadow-lg flex flex-col shrink-0 border border-slate-200">
+            <div class="p-4 md:p-6 space-y-5 pb-8">
+                
+                <header class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-clover text-2xl">psychology</span>
+                    <h2 class="text-xl font-bold text-slate-800">新規作成</h2>
+                </header>
 
-      <!-- 結果表示 -->
-      <div id="resultArea" class="hidden" style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
-        <h3 style="font-size:1rem; font-weight:700; color:var(--clover); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
-          <span class="msym">check_circle</span>生成結果
-        </h3>
+                <div class="flex flex-col xl:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">📅 会議実施日</label>
+                        <input type="date" id="meetingDate" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none bg-slate-50">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">👤 利用者氏名</label>
+                        <input type="text" id="clientName" placeholder="例: 鈴木 太郎 様" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none bg-slate-50">
+                    </div>
+                </div>
 
-        <div class="section-card">
-          <div class="section-title">📌 1. 会議要約（全体まとめ）</div>
-          <textarea class="editable-result" id="res_summary" rows="4"></textarea>
-        </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2">🎤 音声データの追加</label>
+                    
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3 text-center">
+                        <p class="text-[11px] text-slate-500 leading-relaxed">
+                            ※スマホの「ボイスメモ」等のアプリで録音を完了させてから、<br class="hidden sm:block">以下のボタンで保存したファイルを選択してください。
+                        </p>
+                    </div>
 
-        <div class="section-card">
-          <div class="section-title">🎯 2. 開催目的・検討議題 (item1)</div>
-          <textarea class="editable-result" id="res_item1" rows="4"></textarea>
-        </div>
+                    <div class="flex flex-col gap-3">
+                        <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav" class="hidden" onchange="handleFileSelect(this)">
+                        <label for="audioFile" class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-300 text-slate-700 py-3.5 px-4 rounded-xl font-bold shadow-sm cursor-pointer hover:bg-slate-100 active:scale-95 transition-all text-sm">
+                            <span class="material-symbols-outlined text-xl">folder_open</span>
+                            録音したファイルを選ぶ
+                        </label>
+                    </div>
 
-        <div class="section-card">
-          <div class="section-title">💡 3. 発言内容・主な議論 (item2)</div>
-          <textarea class="editable-result" id="res_item2" rows="6"></textarea>
-        </div>
+                    <div id="fileNameDisplay" class="mt-2 text-xs font-bold text-slate-500 hidden text-center bg-slate-100 border border-slate-200 p-2 rounded">
+                        選択中: <span id="fileNameSpan" class="text-clover break-all"></span>
+                    </div>
+                </div>
 
-        <div class="section-card">
-          <div class="section-title">✨ 4. 合意・決定事項・理由 (item3)</div>
-          <textarea class="editable-result" id="res_item3" rows="5"></textarea>
-        </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">📝 補足メモ・キーワード</label>
+                    <textarea id="inputText" class="w-full h-20 p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-clover resize-none shadow-inner" placeholder="（※音声があれば空欄でOK！会議の中で特に取り上げたい内容があればメモとして記入してください🍀）"></textarea>
+                </div>
 
-        <div class="section-card">
-          <div class="section-title">🎉 5. 今後の課題・次回予定 (item4)</div>
-          <textarea class="editable-result" id="res_item4" rows="4"></textarea>
-        </div>
+                <div class="pt-2">
+                    <button id="generateBtn" onclick="generateMinutesFromUI()" class="w-full py-4 bg-clover text-white rounded-xl font-bold text-base shadow-md hover:opacity-80 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-xl text-yellow-400">bolt</span>
+                        AIで要約を作成する
+                    </button>
+                </div>
+                
+                <div id="loadingMsg" class="hidden text-center py-6 px-4 bg-white border border-slate-200 rounded-xl shadow-inner relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-slate-200"><div class="h-full bg-clover animate-pulse"></div></div>
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-4xl animate-spin text-clover">sync</span>
+                        <span class="font-bold text-slate-700">AIが音声・テキストを解析中...</span>
+                        <p class="text-xs text-slate-500">画面を閉じずにそのままお待ちください（2-3分かかります）</p>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-        <div class="action-row">
-          <button class="btn btn-primary" onclick="runSaveLog()">
-            <span class="msym" style="font-size:16px;">cloud_upload</span>データベースに保存
-          </button>
-          <button class="btn btn-secondary" onclick="copyFullMinutes()">
-            <span class="msym" style="font-size:16px;">content_copy</span>テキストコピー
-          </button>
-          <button class="btn btn-amber" onclick="window.print()">
-            <span class="msym" style="font-size:16px;">print</span>印刷
-          </button>
-        </div>
-      </div>
+        <section id="previewSection" class="w-full md:w-[450px] lg:w-[650px] xl:w-[1000px] bg-coopsCard rounded-xl shadow-lg flex flex-col shrink-0 border border-slate-200 md:overflow-hidden relative transition-all">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between shrink-0 sticky top-0 bg-white z-20 rounded-t-xl">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-clover">assignment_turned_in</span>
+                    <h3 class="font-bold text-slate-800 text-lg">カイポケ貼付データ</h3>
+                </div>
+                <button onclick="clearAll()" class="text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 py-1.5 px-3 rounded-md transition flex items-center gap-1 font-bold">
+                    <span class="material-symbols-outlined text-sm">delete</span>クリア
+                </button>
+            </div>
+            
+            <div class="flex-1 p-4 bg-white overflow-y-auto space-y-5 pb-8">
+                
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-600 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base text-blue-600">lightbulb</span>全体要約
+                        </label>
+                        <button onclick="copyToClipboard('outSummary', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">
+                            コピー
+                        </button>
+                    </div>
+                    <textarea id="outSummary" class="w-full text-sm bg-transparent border-none resize-y focus:ring-0 text-slate-800 p-0" rows="4" placeholder="AIの回答がここに入ります"></textarea>
+                </div>
 
+                <div class="space-y-4">
+                    <div class="border-b border-slate-100 pb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-slate-700">① 検討した項目</label>
+                            <button onclick="copyToClipboard('outItem1', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                        </div>
+                        <textarea id="outItem1" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="border-b border-slate-100 pb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-slate-700">② 検討内容</label>
+                            <button onclick="copyToClipboard('outItem2', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                        </div>
+                        <textarea id="outItem2" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="6"></textarea>
+                    </div>
+
+                    <div class="border-b border-slate-100 pb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-slate-700">③ 結論</label>
+                            <button onclick="copyToClipboard('outItem3', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                        </div>
+                        <textarea id="outItem3" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="4"></textarea>
+                    </div>
+
+                    <div class="pb-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-slate-700">④ 残された課題</label>
+                            <button onclick="copyToClipboard('outItem4', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                        </div>
+                        <textarea id="outItem4" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 shrink-0 sticky bottom-0 z-20 rounded-b-xl">
+                <button onclick="saveLogFromUI()" class="w-full py-3.5 bg-clover text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:opacity-80 active:scale-95 transition-all shadow-md">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    データベースに保存
+                </button>
+            </div>
+        </section>
     </div>
 
-    <!-- ══ TAB: 履歴 ══ -->
-    <div id="tab-history" class="tab-content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="font-size:0.95rem; font-weight:700;">過去の議事録ログ一覧</h3>
-        <button class="btn btn-secondary" style="font-size:0.75rem; padding:4px 10px;" onclick="loadHistory()">
-          <span class="msym" style="font-size:15px;">refresh</span>更新
-        </button>
-      </div>
-
-      <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--r-md);">
-        <table>
-          <thead>
-            <tr>
-              <th>登録日時</th>
-              <th>会議日</th>
-              <th>利用者名</th>
-              <th style="text-align:center;">詳細</th>
-            </tr>
-          </thead>
-          <tbody id="historyTbody">
-            <tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── 詳細モーダル ── -->
-  <div class="modal-overlay" id="detailModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title" id="detailModalTitle">議事録詳細</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" id="detailModalSub"></div>
+    <!-- ── 設定モーダル ── -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-lg text-slate-800 mb-2">⚙️ GAS API エンドポイント設定</h3>
+            <p class="text-xs text-slate-500 mb-4">デプロイした GAS の「ウェブアプリURL」を設定します。</p>
+            <input type="text" id="gasApiUrlInput" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none mb-4" placeholder="https://script.google.com/macros/s/.../exec">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">キャンセル</button>
+                <button onclick="saveSettings()" class="px-4 py-2 text-xs font-bold bg-clover text-white rounded-lg hover:opacity-90">保存する</button>
+            </div>
         </div>
-        <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
-      </div>
-      <div id="detailModalBody"></div>
-      <div class="action-row" style="margin-top:16px;">
-        <button class="btn btn-amber" onclick="window.print()">
-          <span class="msym" style="font-size:15px;">print</span>印刷
-        </button>
-        <button class="btn btn-secondary" onclick="closeModal('detailModal')">閉じる</button>
-      </div>
     </div>
-  </div>
 
-  <!-- ── 設定モーダル ── -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal-box" style="max-width: 520px;">
-      <div class="modal-header">
-        <div class="modal-title">⚙️ GAS API 設定</div>
-        <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">GAS Web App URL</label>
-        <input type="text" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-      </div>
-      <div class="action-row">
-        <button class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
-        <button class="btn btn-secondary" onclick="closeModal('settingsModal')">閉じる</button>
-      </div>
-    </div>
-  </div>
+    <script>
+        const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
+        let GAS_API_URL = localStorage.getItem('COOPS_GAS_API_URL') || DEFAULT_GAS_API_URL;
+        let selectedAudioFile = null;
 
-  <script>
-    const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
-    let GAS_API_URL = localStorage.getItem('COOPS_GAS_API_URL') || DEFAULT_GAS_API_URL;
-    let currentAudio = null;
-    let currentResult = null;
-
-    async function callApi(action, payload = {}) {
-      if (!GAS_API_URL) {
-        openModal('settingsModal');
-        throw new Error('GAS API URLが設定されていません。');
-      }
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, payload })
-      });
-      const data = await res.json();
-      if (data && data.error) throw new Error(data.error);
-      return data;
-    }
-
-    function saveSettings() {
-      const url = document.getElementById('gasApiUrlInput').value.trim();
-      if (!url) return;
-      GAS_API_URL = url;
-      localStorage.setItem('COOPS_GAS_API_URL', url);
-      showToast('設定を保存しました');
-      closeModal('settingsModal');
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('meetingDate').value = new Date().toISOString().split('T')[0];
-      document.getElementById('gasApiUrlInput').value = GAS_API_URL;
-    });
-
-    function showLoading(t) {
-      const ov = document.getElementById('loadingOverlay');
-      ov.style.display = ''; ov.classList.remove('hidden');
-      document.getElementById('loadingText').textContent = t || '処理中...';
-    }
-    function hideLoading() {
-      const ov = document.getElementById('loadingOverlay');
-      ov.classList.add('hidden');
-      setTimeout(() => ov.style.display = 'none', 350);
-    }
-    function showToast(msg, type) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'show ' + (type || 'success');
-      setTimeout(() => t.className = '', 3500);
-    }
-
-    function switchTab(name) {
-      ['create', 'history'].forEach(n => {
-        document.getElementById('tab-' + n).classList.remove('active');
-        document.getElementById('tab-btn-' + n).classList.remove('active');
-      });
-      document.getElementById('tab-' + name).classList.add('active');
-      document.getElementById('tab-btn-' + name).classList.add('active');
-      if (name === 'history') loadHistory();
-    }
-
-    function handleUploadFile(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        currentAudio = { base64: ev.target.result.split(',')[1], mimeType: file.type || 'audio/mp3' };
-        document.getElementById('uploadCard').classList.add('active-audio');
-        const stat = document.getElementById('uploadStatus');
-        stat.classList.remove('hidden');
-        stat.textContent = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function runGenerateMinutes() {
-      const inputText = document.getElementById('inputText').value.trim();
-      if (!inputText && !currentAudio) {
-        showToast('テキストメモか音声ファイルをセットしてください', 'error');
-        return;
-      }
-      showLoading('AIが議事録を生成しています...');
-      try {
-        const res = await callApi('generateMinutes', { inputText, audioData: currentAudio });
-        hideLoading();
-        currentResult = res;
-        document.getElementById('res_summary').value = res.summary || '';
-        document.getElementById('res_item1').value = res.item1 || '';
-        document.getElementById('res_item2').value = res.item2 || '';
-        document.getElementById('res_item3').value = res.item3 || '';
-        document.getElementById('res_item4').value = res.item4 || '';
-        document.getElementById('resultArea').classList.remove('hidden');
-        showToast('議事録を生成しました ✓');
-      } catch (err) {
-        hideLoading();
-        showToast('生成エラー: ' + err.message, 'error');
-      }
-    }
-
-    async function runSaveLog() {
-      if (!currentResult) return;
-      showLoading('データベースに保存しています...');
-      try {
-        const payload = {
-          meetingDate: document.getElementById('meetingDate').value,
-          clientName: document.getElementById('clientName').value,
-          inputText: document.getElementById('inputText').value,
-          summary: document.getElementById('res_summary').value,
-          item1: document.getElementById('res_item1').value,
-          item2: document.getElementById('res_item2').value,
-          item3: document.getElementById('res_item3').value,
-          item4: document.getElementById('res_item4').value
-        };
-        const res = await callApi('saveLogAndFinish', payload);
-        hideLoading();
-        showToast(res.message || '保存しました ✓');
-      } catch (err) {
-        hideLoading();
-        showToast('保存エラー: ' + err.message, 'error');
-      }
-    }
-
-    function copyFullMinutes() {
-      const txt = [
-        `【サービス担当者会議 議事録】`,
-        `会議日：${document.getElementById('meetingDate').value}`,
-        `利用者名：${document.getElementById('clientName').value || '未記載'}`, '',
-        `■ 1. 全体要約\n${document.getElementById('res_summary').value}`, '',
-        `■ 2. 開催目的・検討議題\n${document.getElementById('res_item1').value}`, '',
-        `■ 3. 発言内容・主な議論\n${document.getElementById('res_item2').value}`, '',
-        `■ 4. 合意・決定事項\n${document.getElementById('res_item3').value}`, '',
-        `■ 5. 今後の課題・次回予定\n${document.getElementById('res_item4').value}`
-      ].join('\n');
-      navigator.clipboard.writeText(txt).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', 'error'));
-    }
-
-    async function loadHistory() {
-      const tbody = document.getElementById('historyTbody');
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">読み込み中...</td></tr>`;
-      try {
-        const items = await callApi('getHistorySummaryList');
-        if (!items || !items.length) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">📭 履歴がありません</td></tr>`;
-          return;
+        async function callApi(action, payload = {}) {
+            if (!GAS_API_URL) {
+                openSettingsModal();
+                throw new Error('GAS API URLが設定されていません。');
+            }
+            try {
+                const res = await fetch(GAS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action, payload })
+                });
+                const data = await res.json();
+                if (data && data.error) throw new Error(data.error);
+                return data;
+            } catch(err) {
+                console.error("API Call Error:", err);
+                throw err;
+            }
         }
-        tbody.innerHTML = items.map(item => `
-          <tr>
-            <td>${esc(item.timestamp)}</td>
-            <td>${esc(item.meetingDate)}</td>
-            <td>${esc(item.clientName)}</td>
-            <td style="text-align:center;">
-              <button class="tbl-btn" onclick="openDetailModal(${item.id})">詳細</button>
-            </td>
-          </tr>
-        `).join('');
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">エラー: ${esc(err.message)}</td></tr>`;
-      }
-    }
 
-    async function openDetailModal(id) {
-      showLoading('詳細を読み込んでいます...');
-      try {
-        const detail = await callApi('getLogDetail', { id });
-        hideLoading();
-        document.getElementById('detailModalTitle').textContent = `議事録詳細｜${esc(detail.clientName)}`;
-        document.getElementById('detailModalSub').textContent = `登録日時：${detail.timestamp} / 会議日：${detail.meetingDate}`;
-        document.getElementById('detailModalBody').innerHTML = `
-          <div class="section-card"><div class="section-title">📌 1. 会議要約</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.summary)}</div></div>
-          <div class="section-card"><div class="section-title">🎯 2. 開催目的・検討議題</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item1)}</div></div>
-          <div class="section-card"><div class="section-title">💡 3. 発言内容・主な議論</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item2)}</div></div>
-          <div class="section-card"><div class="section-title">✨ 4. 合意・決定事項・理由</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item3)}</div></div>
-          <div class="section-card"><div class="section-title">🎉 5. 今後の課題・次回予定</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item4)}</div></div>
-        `;
-        openModal('detailModal');
-      } catch (err) {
-        hideLoading();
-        showToast('読み込みエラー: ' + err.message, 'error');
-      }
-    }
+        window.onload = function() {
+            document.getElementById('meetingDate').valueAsDate = new Date();
+            document.getElementById('gasApiUrlInput').value = GAS_API_URL;
+            loadHistory();
+        };
 
-    function openModal(id) { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-  </script>
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function saveSettings() {
+            const url = document.getElementById('gasApiUrlInput').value.trim();
+            if(!url) return;
+            GAS_API_URL = url;
+            localStorage.setItem('COOPS_GAS_API_URL', url);
+            closeSettingsModal();
+            loadHistory();
+        }
+
+        function handleFileSelect(inputElement) {
+            if (inputElement.files && inputElement.files[0]) {
+                selectedAudioFile = inputElement.files[0];
+                document.getElementById('fileNameDisplay').classList.remove('hidden');
+                document.getElementById('fileNameSpan').textContent = selectedAudioFile.name;
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('sidebar-closed')) {
+                sidebar.classList.remove('sidebar-closed');
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.remove('sidebar-open');
+                sidebar.classList.add('sidebar-closed');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function filterHistory() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('.history-item');
+            
+            items.forEach(function(item) {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        async function copyToClipboard(elementId, btnElement) {
+            const text = document.getElementById(elementId).value;
+            if (!text) { alert("コピーするテキストがありません。"); return; }
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalHtml = btnElement.innerHTML;
+                btnElement.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span>完了';
+                btnElement.className = 'text-xs bg-slate-100 border border-slate-400 text-slate-800 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all';
+                setTimeout(() => {
+                    btnElement.innerHTML = originalHtml;
+                    btnElement.className = 'text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all';
+                }, 2000);
+            } catch (err) {
+                alert("コピーに失敗しました。手動でコピーしてください。");
+            }
+        }
+
+        async function generateMinutesFromUI() {
+            const inputText = document.getElementById('inputText').value;
+            
+            if (!inputText && !selectedAudioFile) {
+                alert("メモを入力するか、音声データを添付してください。");
+                return;
+            }
+
+            const btn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loadingMsg');
+            btn.style.display = 'none';
+            loading.classList.remove('hidden');
+
+            const resetUI = function() {
+                btn.style.display = 'flex';
+                loading.classList.add('hidden');
+            };
+
+            try {
+                let audioData = null;
+                if (selectedAudioFile) {
+                    if (selectedAudioFile.size > 40 * 1024 * 1024) {
+                        alert("音声ファイルのサイズが40MBを超えています。");
+                        resetUI();
+                        return;
+                    }
+                    audioData = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve({
+                            mimeType: selectedAudioFile.type || 'audio/mp3',
+                            base64: e.target.result.split(',')[1]
+                        });
+                        reader.onerror = reject;
+                        reader.readAsDataURL(selectedAudioFile);
+                    });
+                }
+
+                const result = await callApi('generateMinutes', { inputText, audioData });
+                
+                document.getElementById('outSummary').value = result.summary || '';
+                document.getElementById('outItem1').value = result.item1 || '';
+                document.getElementById('outItem2').value = result.item2 || '';
+                document.getElementById('outItem3').value = result.item3 || '';
+                document.getElementById('outItem4').value = result.item4 || '';
+
+                resetUI();
+                if(window.innerWidth < 768) {
+                    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch(err) {
+                alert("エラーが発生しました: " + err.message);
+                resetUI();
+            }
+        }
+
+        async function saveLogFromUI() {
+            const meetingDate = document.getElementById('meetingDate').value;
+            const clientName = document.getElementById('clientName').value;
+            const inputText = document.getElementById('inputText').value;
+            const summary = document.getElementById('outSummary').value;
+            const out1 = document.getElementById('outItem1').value;
+            const out2 = document.getElementById('outItem2').value;
+            const out3 = document.getElementById('outItem3').value;
+            const out4 = document.getElementById('outItem4').value;
+            
+            if (!out1 && !out2) {
+                alert("まだ議事録が作成されていません。");
+                return;
+            }
+
+            const saveBtn = document.querySelector('button[onclick="saveLogFromUI()"]');
+            const origHtml = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span>保存中...';
+            saveBtn.disabled = true;
+
+            try {
+                const res = await callApi('saveLogAndFinish', {
+                    meetingDate, clientName, inputText, summary,
+                    item1: out1, item2: out2, item3: out3, item4: out4
+                });
+                alert("✅ " + (res.message || "保存完了しました"));
+                saveBtn.innerHTML = origHtml;
+                saveBtn.disabled = false;
+                loadHistory(); 
+            } catch(err) {
+                alert("保存に失敗しました。\n理由: " + err.message);
+                saveBtn.innerHTML = origHtml;
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function loadHistory() {
+            const listDiv = document.getElementById('historyList');
+            listDiv.innerHTML = '<div class="text-center text-slate-400 text-sm mt-5">読み込み中...</div>';
+            
+            try {
+                const historyArr = await callApi('getHistorySummaryList');
+                listDiv.innerHTML = '';
+                if (!historyArr || historyArr.length === 0) {
+                    listDiv.innerHTML = '<div class="text-center text-slate-400 text-sm mt-5">履歴がありません</div>';
+                    return;
+                }
+                
+                historyArr.forEach(function(item) {
+                    const html = `
+                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-slate-200 p-3 rounded-lg shadow-sm cursor-pointer hover:border-clover hover:bg-slate-50 transition">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-slate-500">${item.meetingDate}</span>
+                            <span class="text-[10px] text-slate-400">#${item.id}</span>
+                        </div>
+                        <div class="font-bold text-slate-700 text-sm truncate">${item.clientName}</div>
+                    </div>`;
+                    listDiv.innerHTML += html;
+                });
+                
+                filterHistory();
+            } catch (err) {
+                listDiv.innerHTML = '<div class="text-center text-red-500 font-bold text-sm mt-5 p-3 bg-red-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
+            }
+        }
+
+        async function restoreHistory(rowId) {
+            try {
+                const item = await callApi('getLogDetail', { id: rowId });
+                
+                if(item.meetingDate) document.getElementById('meetingDate').value = item.meetingDate.replace(/\//g, '-');
+                document.getElementById('clientName').value = item.clientName !== "名前なし" ? item.clientName : '';
+                document.getElementById('inputText').value = item.inputText || '';
+                document.getElementById('outSummary').value = item.summary || '';
+                document.getElementById('outItem1').value = item.item1 || '';
+                document.getElementById('outItem2').value = item.item2 || '';
+                document.getElementById('outItem3').value = item.item3 || '';
+                document.getElementById('outItem4').value = item.item4 || '';
+                
+                toggleSidebar();
+                
+                if(window.innerWidth < 768) {
+                    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (err) {
+                alert("詳細データの読み込みに失敗しました: " + err.message);
+            }
+        }
+
+        function clearAll() {
+            if(!confirm("画面の入力内容をすべてクリアしますか？（※保存済みのデータは消えません）")) return;
+            document.getElementById('meetingDate').valueAsDate = new Date();
+            document.getElementById('clientName').value = '';
+            document.getElementById('inputText').value = '';
+            document.getElementById('audioFile').value = '';
+            
+            selectedAudioFile = null;
+            document.getElementById('fileNameDisplay').classList.add('hidden');
+            
+            document.getElementById('outSummary').value = '';
+            document.getElementById('outItem1').value = '';
+            document.getElementById('outItem2').value = '';
+            document.getElementById('outItem3').value = '';
+            document.getElementById('outItem4').value = '';
+        }
+    </script>
 </body>
-
 </html>
