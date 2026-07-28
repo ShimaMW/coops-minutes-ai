@@ -582,37 +582,59 @@
 
         async function loadHistory() {
             const listDiv = document.getElementById('historyList');
-            listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">読み込み中...</div>';
             
+            // ⚡ ① ブラウザキャッシュ（保存済みデータ）があれば 0.01秒で即時表示（待ち時間ゼロ！）
+            const cachedDataStr = localStorage.getItem('CARECORE_HISTORY_CACHE');
+            if (cachedDataStr) {
+                try {
+                    const cachedArr = JSON.parse(cachedDataStr);
+                    if (Array.isArray(cachedArr) && cachedArr.length > 0) {
+                        renderHistoryItems(cachedArr);
+                    }
+                } catch(e) {}
+            } else {
+                listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">読み込み中...</div>';
+            }
+            
+            // ⚡ ② 裏側で最新データを非同期取得してそっと更新＆キャッシュ保存
             try {
                 const historyArr = await callApi('getHistorySummaryList');
-                listDiv.innerHTML = '';
                 if (!historyArr || historyArr.length === 0) {
                     listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">履歴がありません</div>';
+                    localStorage.removeItem('CARECORE_HISTORY_CACHE');
                     return;
                 }
                 
-                historyArr.forEach(function(item) {
-                    const html = `
-                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition flex items-center justify-between group">
-                        <div class="flex-1 min-w-0 pr-2">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
-                                <span class="text-[10px] text-slate-400">#${item.id}</span>
-                            </div>
-                            <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
-                        </div>
-                        <button onclick="confirmDeleteHistory(event, ${item.id}, '${item.clientName}', '${item.meetingDate}')" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-md hover:bg-rose-50 transition" title="このログを削除">
-                            <span class="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                    </div>`;
-                    listDiv.innerHTML += html;
-                });
-                
-                filterHistory();
+                // 最新データを保存＆レンダリング
+                localStorage.setItem('CARECORE_HISTORY_CACHE', JSON.stringify(historyArr));
+                renderHistoryItems(historyArr);
             } catch (err) {
-                listDiv.innerHTML = '<div class="text-center text-rose-500 font-bold text-xs mt-5 p-3 bg-rose-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
+                if (!cachedDataStr) {
+                    listDiv.innerHTML = '<div class="text-center text-rose-500 font-bold text-xs mt-5 p-3 bg-rose-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
+                }
             }
+        }
+
+        function renderHistoryItems(historyArr) {
+            const listDiv = document.getElementById('historyList');
+            listDiv.innerHTML = '';
+            historyArr.forEach(function(item) {
+                const html = `
+                <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition flex items-center justify-between group">
+                    <div class="flex-1 min-w-0 pr-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
+                            <span class="text-[10px] text-slate-400">#${item.id}</span>
+                        </div>
+                        <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
+                    </div>
+                    <button onclick="confirmDeleteHistory(event, ${item.id}, '${item.clientName}', '${item.meetingDate}')" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-md hover:bg-rose-50 transition" title="このログを削除">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>`;
+                listDiv.innerHTML += html;
+            });
+            filterHistory();
         }
 
         async function confirmDeleteHistory(event, rowId, clientName, meetingDate) {
