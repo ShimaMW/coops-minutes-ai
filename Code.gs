@@ -180,18 +180,20 @@ function saveLogAndFinish(meetingDate, clientName, inputText, summary, item1, it
 function getHistorySummaryList() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (!ss) throw new Error("スプレッドシートが見つかりません。");
+    if (!ss) return [];
     
     const sheet = ss.getSheets()[0];
     const lastRow = sheet.getLastRow();
-    if (lastRow < 1) return []; 
+    const lastCol = sheet.getLastColumn();
+    if (lastRow <= 1 || lastCol < 1) return []; 
     
-    const data = sheet.getRange(1, 1, lastRow, Math.min(sheet.getLastColumn(), 4)).getValues();
+    const fetchCols = Math.min(lastCol, 4);
+    const data = sheet.getRange(1, 1, lastRow, fetchCols).getValues();
     
     let history = [];
-    for (let i = lastRow - 1; i >= 0; i--) {
+    for (let i = lastRow - 1; i >= 1; i--) {
       const ts = data[i][0];
-      if (!ts || ts === "登録日時" || (typeof ts === 'string' && ts.includes("日時"))) continue; 
+      if (!ts || ts === "登録日時" || (typeof ts === 'string' && (ts.includes("日時") || ts.includes("登録")))) continue; 
       
       let dateStr = "";
       if (data[i][1] instanceof Date) {
@@ -218,7 +220,8 @@ function getHistorySummaryList() {
     }
     return history;
   } catch (e) {
-    return { error: e.message };
+    console.error(e);
+    return [];
   }
 }
 
