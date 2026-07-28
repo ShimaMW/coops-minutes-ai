@@ -74,8 +74,8 @@ function generateMinutes(inputText, audioData) {
     }
   }
 
-  // 最新の超高速モデル gemini-2.0-flash （または gemini-1.5-flash / gemini-3.1-flash-lite-preview）
-  const GEMINI_MODEL = 'gemini-2.0-flash';
+  // Geminiモデルの指定
+  const GEMINI_MODEL = 'gemini-3.5-flash';
   const generateUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + apiKey;
 
   const prompt = `
