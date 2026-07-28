@@ -62,11 +62,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button onclick="openSettingsModal()" class="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition border border-slate-200">
-                <span class="material-symbols-outlined text-sm">settings</span>設定
-            </button>
-        </div>
+        <div></div>
     </header>
 
     <!-- ── Sidebar Overlay ── -->
@@ -279,18 +275,7 @@
         </div>
     </div>
 
-    <!-- ── 設定モーダル ── -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-careBorder">
-            <h3 class="font-bold text-base text-slate-800 mb-1">⚙️ GAS API エンドポイント設定</h3>
-            <p class="text-xs text-slate-500 mb-4">デプロイした GAS の「ウェブアプリURL」を設定します。</p>
-            <input type="text" id="gasApiUrlInput" class="w-full p-2.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none mb-4" placeholder="https://script.google.com/macros/s/.../exec">
-            <div class="flex justify-end gap-2">
-                <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">キャンセル</button>
-                <button onclick="saveSettings()" class="px-4 py-2 text-xs font-bold bg-carePrimary text-white rounded-lg hover:bg-carePrimaryDark">保存する</button>
-            </div>
-        </div>
-    </div>
+
 
     <script>
         const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
