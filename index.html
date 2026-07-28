@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>COOPs 担当者会議議事録AI</title>
+    <title>carecore 担当者会議AI議事録</title>
+    <link rel="icon" type="image/png" href="./favicon.png"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet"/>
@@ -12,9 +13,15 @@
             theme: { 
                 extend: { 
                     colors: { 
-                        coopsBg: "#374151", 
-                        coopsCard: "#ffffff",
-                        clover: "#354045"
+                        carePrimary: "#7a6859",
+                        carePrimaryDark: "#635447",
+                        carePrimaryLight: "#f5f0eb",
+                        careGreen: "#6b8e4e",
+                        careBg: "#f4f5f8",
+                        careCard: "#ffffff",
+                        careBorder: "#e5e7eb",
+                        careText: "#1f2937",
+                        careMuted: "#6b7280"
                     }, 
                     fontFamily: { sans: ['"Noto Sans JP"', 'sans-serif'] } 
                 } 
@@ -22,186 +29,206 @@
         }
     </script>
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #374151; }
-        ::-webkit-scrollbar { width: 6px; }
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #f4f5f8; color: #1f2937; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .sidebar-open { transform: translateX(0%); }
         .sidebar-closed { transform: translateX(-100%); }
+        .tab-btn-active {
+            background-color: #7a6859;
+            color: #ffffff;
+            font-weight: 700;
+        }
     </style>
 </head>
-<body class="text-slate-800 bg-coopsBg h-[100dvh] overflow-hidden flex flex-col">
+<body class="bg-careBg h-[100dvh] overflow-hidden flex flex-col">
 
-    <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md z-30 shrink-0 border-b border-slate-700">
-        <button onclick="toggleSidebar()" class="flex items-center justify-center p-1 rounded hover:bg-slate-600 transition" title="メニューを開く">
-            <span class="material-symbols-outlined text-3xl">menu</span>
-        </button>
+    <!-- ── Header ── -->
+    <header class="bg-white text-slate-800 px-4 py-2.5 flex justify-between items-center shadow-sm z-30 shrink-0 border-b border-careBorder">
         <div class="flex items-center gap-3">
-            <img src="data:image/png;base64,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 subterranean" alt="COOPs" class="h-6 md:h-8 object-contain">
-            <span class="font-bold text-sm md:text-base border-l border-slate-500 pl-3 text-slate-300">担当者会議AI議事録</span>
+            <button onclick="toggleSidebar()" class="flex items-center justify-center p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" title="メニューを開く">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <div class="flex items-center gap-2">
+                <img src="./logo.png" alt="carecore" class="h-7 md:h-8 object-contain" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='inline-block';">
+                <span id="logoFallback" class="font-bold text-xl text-carePrimary hidden" style="font-family:sans-serif;">care<span class="text-careGreen">core</span></span>
+                <span class="text-xs md:text-sm font-bold text-slate-500 border-l border-slate-300 pl-2.5 ml-1">担当者会議AI議事録</span>
+            </div>
         </div>
-        <button onclick="openSettingsModal()" class="flex items-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded transition text-slate-200">
-            <span class="material-symbols-outlined text-sm">settings</span>設定
-        </button>
+
+        <div class="flex items-center gap-2">
+            <button onclick="openSettingsModal()" class="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition border border-slate-200">
+                <span class="material-symbols-outlined text-sm">settings</span>設定
+            </button>
+        </div>
     </header>
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity" onclick="toggleSidebar()"></div>
+    <!-- ── Sidebar Overlay ── -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden transition-opacity" onclick="toggleSidebar()"></div>
     
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-slate-50 flex flex-col transition-transform duration-300 sidebar-closed shadow-2xl shrink-0">
-        <div class="p-4 border-b border-slate-200 bg-slate-800 text-white flex items-center gap-3 shrink-0">
-            <span class="material-symbols-outlined text-xl">auto_stories</span>
-            <h2 class="font-bold">データベースから呼出</h2>
-            <button onclick="toggleSidebar()" class="ml-auto flex items-center p-1 rounded hover:bg-slate-600 transition" title="閉じる">
+    <!-- ── Sidebar ── -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-white flex flex-col transition-transform duration-300 sidebar-closed shadow-2xl shrink-0 border-r border-careBorder">
+        <div class="p-4 border-b border-careBorder bg-carePrimaryLight flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2 text-carePrimary">
+                <span class="material-symbols-outlined text-xl">folder_open</span>
+                <h2 class="font-bold text-sm">過去ログ呼び出し</h2>
+            </div>
+            <button onclick="toggleSidebar()" class="p-1 rounded-full text-slate-400 hover:bg-white transition" title="閉じる">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
         
-        <div class="p-3 bg-slate-100 border-b border-slate-200 shrink-0 space-y-2">
+        <div class="p-3 bg-slate-50 border-b border-careBorder shrink-0 space-y-2">
             <div class="flex justify-between items-center">
                 <p class="text-xs font-bold text-slate-500">保存済みデータ</p>
-                <button onclick="loadHistory()" class="text-clover hover:bg-slate-200 p-1 rounded-full transition flex items-center" title="最新の情報に更新">
+                <button onclick="loadHistory()" class="text-carePrimary hover:bg-slate-200 p-1 rounded-full transition flex items-center" title="最新の情報に更新">
                     <span class="material-symbols-outlined text-sm">refresh</span>
                 </button>
             </div>
             <div class="relative">
-                <span class="material-symbols-outlined absolute left-2 top-2 text-slate-400 text-lg">search</span>
-                <input type="text" id="searchInput" onkeyup="filterHistory()" placeholder="名前や日付で検索..." class="w-full pl-8 p-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-clover outline-none">
+                <span class="material-symbols-outlined absolute left-2.5 top-2.5 text-slate-400 text-base">search</span>
+                <input type="text" id="searchInput" onkeyup="filterHistory()" placeholder="名前や日付で検索..." class="w-full pl-8 p-2 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none">
             </div>
         </div>
         
-        <div id="historyList" class="flex-1 overflow-y-auto p-3 space-y-3">
-            <div class="text-center text-slate-400 text-sm mt-5">読み込み中...</div>
+        <div id="historyList" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+            <div class="text-center text-slate-400 text-xs mt-5">読み込み中...</div>
         </div>
     </aside>
 
-    <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative w-full p-2 md:p-4 gap-2 md:gap-4">
+    <!-- ── Main Workspace ── -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative w-full p-2.5 md:p-4 gap-3 md:gap-4">
         
-        <main class="w-full md:flex-1 md:overflow-y-auto bg-coopsCard rounded-xl shadow-lg flex flex-col shrink-0 border border-slate-200">
+        <!-- 左パネル：入力・生成 -->
+        <main class="w-full md:flex-1 md:overflow-y-auto bg-careCard rounded-xl shadow-sm flex flex-col shrink-0 border border-careBorder">
             <div class="p-4 md:p-6 space-y-5 pb-8">
                 
-                <header class="flex items-center gap-2 mb-4">
-                    <span class="material-symbols-outlined text-clover text-2xl">psychology</span>
-                    <h2 class="text-xl font-bold text-slate-800">新規作成</h2>
+                <header class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <span class="material-symbols-outlined text-carePrimary text-2xl">edit_square</span>
+                    <h2 class="text-base md:text-lg font-bold text-slate-800">新規作成</h2>
                 </header>
 
-                <div class="flex flex-col xl:flex-row gap-4">
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-slate-500 mb-1">📅 会議実施日</label>
-                        <input type="date" id="meetingDate" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none bg-slate-50">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">📅 会議実施日</label>
+                        <input type="date" id="meetingDate" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
                     </div>
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-slate-500 mb-1">👤 利用者氏名</label>
-                        <input type="text" id="clientName" placeholder="例: 鈴木 太郎 様" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none bg-slate-50">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">👤 利用者氏名</label>
+                        <input type="text" id="clientName" placeholder="例: 鈴木 太郎 様" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2">🎤 音声データの追加</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">🎤 音声データの追加</label>
                     
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3 text-center">
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
-                            ※スマホの「ボイスメモ」等のアプリで録音を完了させてから、<br class="hidden sm:block">以下のボタンで保存したファイルを選択してください。
+                    <div class="bg-carePrimaryLight/60 p-3 rounded-lg border border-carePrimary/20 mb-3 text-center">
+                        <p class="text-[11px] text-carePrimaryDark leading-relaxed">
+                            ※ボイスメモ等で録音した音声ファイルを選択してください。
                         </p>
                     </div>
 
                     <div class="flex flex-col gap-3">
                         <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav" class="hidden" onchange="handleFileSelect(this)">
-                        <label for="audioFile" class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-300 text-slate-700 py-3.5 px-4 rounded-xl font-bold shadow-sm cursor-pointer hover:bg-slate-100 active:scale-95 transition-all text-sm">
-                            <span class="material-symbols-outlined text-xl">folder_open</span>
-                            録音したファイルを選ぶ
+                        <label for="audioFile" class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-dashed border-slate-300 text-slate-700 py-3.5 px-4 rounded-xl font-bold shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 active:scale-[0.99] transition-all text-sm">
+                            <span class="material-symbols-outlined text-xl text-carePrimary">upload_file</span>
+                            録音ファイルを選択する
                         </label>
                     </div>
 
-                    <div id="fileNameDisplay" class="mt-2 text-xs font-bold text-slate-500 hidden text-center bg-slate-100 border border-slate-200 p-2 rounded">
-                        選択中: <span id="fileNameSpan" class="text-clover break-all"></span>
+                    <div id="fileNameDisplay" class="mt-2 text-xs font-bold text-slate-600 hidden text-center bg-slate-50 border border-slate-200 p-2 rounded-lg">
+                        選択中: <span id="fileNameSpan" class="text-carePrimary break-all"></span>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">📝 補足メモ・キーワード</label>
-                    <textarea id="inputText" class="w-full h-20 p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-clover resize-none shadow-inner" placeholder="（※音声があれば空欄でOK！会議の中で特に取り上げたい内容があればメモとして記入してください🍀）"></textarea>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">📝 補足メモ・キーワード</label>
+                    <textarea id="inputText" class="w-full h-24 p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-carePrimary resize-none shadow-inner" placeholder="（※音声があれば空欄でOK！会議で特に強調したいポイントがあれば記入してください）"></textarea>
                 </div>
 
                 <div class="pt-2">
-                    <button id="generateBtn" onclick="generateMinutesFromUI()" class="w-full py-4 bg-clover text-white rounded-xl font-bold text-base shadow-md hover:opacity-80 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-xl text-yellow-400">bolt</span>
+                    <button id="generateBtn" onclick="generateMinutesFromUI()" class="w-full py-3.5 bg-carePrimary hover:bg-carePrimaryDark text-white rounded-xl font-bold text-sm md:text-base shadow hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-xl text-amber-300">bolt</span>
                         AIで要約を作成する
                     </button>
                 </div>
                 
                 <div id="loadingMsg" class="hidden text-center py-6 px-4 bg-white border border-slate-200 rounded-xl shadow-inner relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-slate-200"><div class="h-full bg-clover animate-pulse"></div></div>
+                    <div class="absolute top-0 left-0 w-full h-1 bg-slate-200"><div class="h-full bg-carePrimary animate-pulse"></div></div>
                     <div class="flex flex-col items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-4xl animate-spin text-clover">sync</span>
-                        <span class="font-bold text-slate-700">AIが音声・テキストを解析中...</span>
+                        <span class="material-symbols-outlined text-3xl animate-spin text-carePrimary">sync</span>
+                        <span class="font-bold text-sm text-slate-700">AIが音声・テキストを解析中...</span>
                         <p class="text-xs text-slate-500">画面を閉じずにそのままお待ちください（2-3分かかります）</p>
                     </div>
                 </div>
             </div>
         </main>
 
-        <section id="previewSection" class="w-full md:w-[450px] lg:w-[650px] xl:w-[1000px] bg-coopsCard rounded-xl shadow-lg flex flex-col shrink-0 border border-slate-200 md:overflow-hidden relative transition-all">
-            <div class="p-4 border-b border-slate-100 flex items-center justify-between shrink-0 sticky top-0 bg-white z-20 rounded-t-xl">
+        <!-- 右パネル：カイポケ貼付データ・プレビュー -->
+        <section id="previewSection" class="w-full md:w-[450px] lg:w-[600px] xl:w-[850px] bg-careCard rounded-xl shadow-sm flex flex-col shrink-0 border border-careBorder md:overflow-hidden relative transition-all">
+            <div class="p-3.5 border-b border-careBorder flex items-center justify-between shrink-0 sticky top-0 bg-white z-20 rounded-t-xl">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-clover">assignment_turned_in</span>
-                    <h3 class="font-bold text-slate-800 text-lg">カイポケ貼付データ</h3>
+                    <span class="material-symbols-outlined text-carePrimary">assignment_turned_in</span>
+                    <h3 class="font-bold text-slate-800 text-sm md:text-base">カイポケ貼付データ</h3>
                 </div>
-                <button onclick="clearAll()" class="text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 py-1.5 px-3 rounded-md transition flex items-center gap-1 font-bold">
+                <button onclick="clearAll()" class="text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 py-1.5 px-3 rounded-full transition flex items-center gap-1 font-bold">
                     <span class="material-symbols-outlined text-sm">delete</span>クリア
                 </button>
             </div>
             
-            <div class="flex-1 p-4 bg-white overflow-y-auto space-y-5 pb-8">
+            <div class="flex-1 p-4 bg-white overflow-y-auto space-y-4 pb-8">
                 
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <!-- 全体要約 -->
+                <div class="p-3 bg-carePrimaryLight/40 border border-carePrimary/20 rounded-lg">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="block text-xs font-bold text-slate-600 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-base text-blue-600">lightbulb</span>全体要約
+                        <label class="block text-xs font-bold text-carePrimaryDark flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base text-amber-600">lightbulb</span>全体要約
                         </label>
-                        <button onclick="copyToClipboard('outSummary', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">
+                        <button onclick="copyToClipboard('outSummary', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold">
                             コピー
                         </button>
                     </div>
-                    <textarea id="outSummary" class="w-full text-sm bg-transparent border-none resize-y focus:ring-0 text-slate-800 p-0" rows="4" placeholder="AIの回答がここに入ります"></textarea>
+                    <textarea id="outSummary" class="w-full text-sm bg-transparent border-none resize-y focus:ring-0 text-slate-800 p-0" rows="3" placeholder="AIの回答がここに入ります"></textarea>
                 </div>
 
                 <div class="space-y-4">
-                    <div class="border-b border-slate-100 pb-4">
+                    <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-bold text-slate-700">① 検討した項目</label>
-                            <button onclick="copyToClipboard('outItem1', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                            <label class="block text-xs font-bold text-slate-700">① 検討した項目</label>
+                            <button onclick="copyToClipboard('outItem1', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold">コピー</button>
                         </div>
-                        <textarea id="outItem1" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="3"></textarea>
+                        <textarea id="outItem1" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-carePrimary resize-y" rows="3"></textarea>
                     </div>
                     
-                    <div class="border-b border-slate-100 pb-4">
+                    <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-bold text-slate-700">② 検討内容</label>
-                            <button onclick="copyToClipboard('outItem2', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                            <label class="block text-xs font-bold text-slate-700">② 検討内容</label>
+                            <button onclick="copyToClipboard('outItem2', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold">コピー</button>
                         </div>
-                        <textarea id="outItem2" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="6"></textarea>
+                        <textarea id="outItem2" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-carePrimary resize-y" rows="5"></textarea>
                     </div>
 
-                    <div class="border-b border-slate-100 pb-4">
+                    <div class="border-b border-slate-100 pb-3">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-bold text-slate-700">③ 結論</label>
-                            <button onclick="copyToClipboard('outItem3', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                            <label class="block text-xs font-bold text-slate-700">③ 結論</label>
+                            <button onclick="copyToClipboard('outItem3', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold">コピー</button>
                         </div>
-                        <textarea id="outItem3" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="4"></textarea>
+                        <textarea id="outItem3" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-carePrimary resize-y" rows="4"></textarea>
                     </div>
 
                     <div class="pb-2">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-bold text-slate-700">④ 残された課題</label>
-                            <button onclick="copyToClipboard('outItem4', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all">コピー</button>
+                            <label class="block text-xs font-bold text-slate-700">④ 残された課題</label>
+                            <button onclick="copyToClipboard('outItem4', this)" class="text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold">コピー</button>
                         </div>
-                        <textarea id="outItem4" class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover resize-y" rows="4"></textarea>
+                        <textarea id="outItem4" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-carePrimary resize-y" rows="4"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="p-4 bg-slate-50 border-t border-slate-200 shrink-0 sticky bottom-0 z-20 rounded-b-xl">
-                <button onclick="saveLogFromUI()" class="w-full py-3.5 bg-clover text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:opacity-80 active:scale-95 transition-all shadow-md">
+            <div class="p-3.5 bg-slate-50 border-t border-careBorder shrink-0 sticky bottom-0 z-20 rounded-b-xl">
+                <button onclick="saveLogFromUI()" class="w-full py-3 bg-carePrimary hover:bg-carePrimaryDark text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all shadow">
                     <span class="material-symbols-outlined">cloud_upload</span>
                     データベースに保存
                 </button>
@@ -210,14 +237,14 @@
     </div>
 
     <!-- ── 設定モーダル ── -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="font-bold text-lg text-slate-800 mb-2">⚙️ GAS API エンドポイント設定</h3>
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-careBorder">
+            <h3 class="font-bold text-base text-slate-800 mb-1">⚙️ GAS API エンドポイント設定</h3>
             <p class="text-xs text-slate-500 mb-4">デプロイした GAS の「ウェブアプリURL」を設定します。</p>
-            <input type="text" id="gasApiUrlInput" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-clover outline-none mb-4" placeholder="https://script.google.com/macros/s/.../exec">
+            <input type="text" id="gasApiUrlInput" class="w-full p-2.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none mb-4" placeholder="https://script.google.com/macros/s/.../exec">
             <div class="flex justify-end gap-2">
                 <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">キャンセル</button>
-                <button onclick="saveSettings()" class="px-4 py-2 text-xs font-bold bg-clover text-white rounded-lg hover:opacity-90">保存する</button>
+                <button onclick="saveSettings()" class="px-4 py-2 text-xs font-bold bg-carePrimary text-white rounded-lg hover:bg-carePrimaryDark">保存する</button>
             </div>
         </div>
     </div>
@@ -241,7 +268,7 @@
                     body: JSON.stringify({ action, payload })
                 });
                 if (!res.ok) {
-                    throw new Error(`HTTPエラー ${res.status}: アクセスが拒否されました。`);
+                    throw new Error(`HTTPエラー ${res.status}`);
                 }
                 const data = await res.json();
                 if (data && data.error) throw new Error(data.error);
@@ -315,10 +342,10 @@
                 await navigator.clipboard.writeText(text);
                 const originalHtml = btnElement.innerHTML;
                 btnElement.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span>完了';
-                btnElement.className = 'text-xs bg-slate-100 border border-slate-400 text-slate-800 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all';
+                btnElement.className = 'text-xs bg-slate-100 border border-slate-400 text-slate-800 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold';
                 setTimeout(() => {
                     btnElement.innerHTML = originalHtml;
-                    btnElement.className = 'text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded shadow-sm flex items-center gap-1 transition-all';
+                    btnElement.className = 'text-xs bg-white border border-slate-300 hover:bg-slate-100 py-1 px-3 rounded-full shadow-sm flex items-center gap-1 transition-all font-bold';
                 }, 2000);
             } catch (err) {
                 alert("コピーに失敗しました。手動でコピーしてください。");
@@ -375,7 +402,7 @@
                     document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
                 }
             } catch(err) {
-                alert("エラーが発生しました: " + err.message);
+                alert(err.message);
                 resetUI();
             }
         }
@@ -410,7 +437,7 @@
                 saveBtn.disabled = false;
                 loadHistory(); 
             } catch(err) {
-                alert("保存に失敗しました。\n理由: " + err.message);
+                alert(err.message);
                 saveBtn.innerHTML = origHtml;
                 saveBtn.disabled = false;
             }
@@ -418,31 +445,31 @@
 
         async function loadHistory() {
             const listDiv = document.getElementById('historyList');
-            listDiv.innerHTML = '<div class="text-center text-slate-400 text-sm mt-5">読み込み中...</div>';
+            listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">読み込み中...</div>';
             
             try {
                 const historyArr = await callApi('getHistorySummaryList');
                 listDiv.innerHTML = '';
                 if (!historyArr || historyArr.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center text-slate-400 text-sm mt-5">履歴がありません</div>';
+                    listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">履歴がありません</div>';
                     return;
                 }
                 
                 historyArr.forEach(function(item) {
                     const html = `
-                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-slate-200 p-3 rounded-lg shadow-sm cursor-pointer hover:border-clover hover:bg-slate-50 transition">
+                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-bold text-slate-500">${item.meetingDate}</span>
+                            <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
                             <span class="text-[10px] text-slate-400">#${item.id}</span>
                         </div>
-                        <div class="font-bold text-slate-700 text-sm truncate">${item.clientName}</div>
+                        <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
                     </div>`;
                     listDiv.innerHTML += html;
                 });
                 
                 filterHistory();
             } catch (err) {
-                listDiv.innerHTML = '<div class="text-center text-red-500 font-bold text-sm mt-5 p-3 bg-red-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
+                listDiv.innerHTML = '<div class="text-center text-rose-500 font-bold text-xs mt-5 p-3 bg-rose-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
             }
         }
 
