@@ -629,22 +629,29 @@
         function renderHistoryItems(historyArr) {
             const listDiv = document.getElementById('historyList');
             listDiv.innerHTML = '';
+            
+            const container = document.createElement('div');
+            container.className = 'divide-y divide-slate-100 border-y border-careBorder bg-white rounded-lg overflow-hidden shadow-sm';
+
             historyArr.forEach(function(item) {
-                const html = `
-                <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition flex items-center justify-between group">
-                    <div class="flex-1 min-w-0 pr-2">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
-                            <span class="text-[10px] text-slate-400">#${item.id}</span>
-                        </div>
-                        <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
+                const row = document.createElement('div');
+                row.className = 'history-item flex items-center justify-between py-2.5 px-3 hover:bg-carePrimaryLight/60 cursor-pointer transition text-xs group';
+                row.onclick = () => restoreHistory(item.id);
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                        <span class="text-[10px] font-mono text-slate-400 shrink-0">#${item.id}</span>
+                        <span class="text-[11px] font-bold text-slate-500 shrink-0 whitespace-nowrap">${item.meetingDate}</span>
+                        <span class="font-bold text-slate-800 truncate text-xs">${item.clientName}</span>
                     </div>
-                    <button onclick="confirmDeleteHistory(event, ${item.id}, '${item.clientName}', '${item.meetingDate}')" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-md hover:bg-rose-50 transition" title="このログを削除">
-                        <span class="material-symbols-outlined text-lg">delete</span>
+                    <button onclick="confirmDeleteHistory(event, ${item.id}, '${item.clientName}', '${item.meetingDate}')" class="text-slate-300 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition shrink-0" title="削除">
+                        <span class="material-symbols-outlined text-base">delete</span>
                     </button>
-                </div>`;
-                listDiv.innerHTML += html;
+                `;
+                container.appendChild(row);
             });
+
+            listDiv.appendChild(container);
             filterHistory();
         }
 
