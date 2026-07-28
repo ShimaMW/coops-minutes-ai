@@ -35,6 +35,9 @@ function doPost(e) {
       case 'getLogDetail':
         responseData = getLogDetail(payload.id);
         break;
+      case 'deleteLog':
+        responseData = deleteLog(payload.id);
+        break;
       default:
         responseData = { error: 'Unknown action: ' + action };
     }
@@ -246,6 +249,24 @@ function getLogDetail(rowId) {
       item3: String(data[7] || ""),
       item4: String(data[8] || "")
     };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+function deleteLog(rowId) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) throw new Error("スプレッドシートが見つかりません。");
+    
+    const sheet = ss.getSheets()[0];
+    const row = parseInt(rowId, 10);
+    if (isNaN(row) || row < 1 || row > sheet.getLastRow()) {
+      return { error: "該当レコードが見つかりません。" };
+    }
+    
+    sheet.deleteRow(row);
+    return { success: true, message: "該当する過去ログを削除しました" };
   } catch (e) {
     return { error: e.message };
   }

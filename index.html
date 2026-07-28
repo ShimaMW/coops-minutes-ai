@@ -40,11 +40,11 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .animate-popup { animation: popupIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes pulseRed {
+        @keyframes pulseSoft {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+            50% { opacity: 0.5; }
         }
-        .rec-active { animation: pulseRed 1.2s infinite; }
+        .rec-active { animation: pulseSoft 1.2s infinite; }
     </style>
 </head>
 <body class="bg-careBg h-[100dvh] overflow-hidden flex flex-col">
@@ -129,20 +129,20 @@
                     <label class="block text-xs font-bold text-slate-600 mb-2">🎤 音声データの追加方法</label>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- 方法1: 画面で直接録音 -->
+                        <!-- 方法1: 画面で直接録音 (carecoreトンマナ統一) -->
                         <div id="micCard" class="bg-white border-2 border-slate-200 hover:border-carePrimary/50 rounded-xl p-3.5 text-center flex flex-col items-center justify-between transition-all">
                             <div class="flex items-center gap-1.5 text-slate-700 font-bold text-xs mb-2">
-                                <span class="material-symbols-outlined text-rose-500">mic</span>
+                                <span class="material-symbols-outlined text-amber-700">mic</span>
                                 この画面でマイク録音
                             </div>
                             
-                            <button id="recBtn" onclick="toggleRecording()" class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-rose-200">
+                            <button id="recBtn" onclick="toggleRecording()" class="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-amber-200">
                                 <span class="material-symbols-outlined text-base" id="recIcon">fiber_manual_record</span>
                                 <span id="recBtnText">録音を開始する</span>
                             </button>
 
-                            <div id="recTimer" class="text-[11px] font-mono font-bold text-rose-600 mt-2 hidden flex items-center gap-1">
-                                <span class="inline-block w-2 h-2 rounded-full bg-rose-600 rec-active"></span>
+                            <div id="recTimer" class="text-[11px] font-mono font-bold text-amber-800 mt-2 hidden flex items-center gap-1">
+                                <span class="inline-block w-2 h-2 rounded-full bg-amber-600 rec-active"></span>
                                 録音中: <span id="timerCount">00:00</span>
                             </div>
                         </div>
@@ -163,9 +163,9 @@
                         </div>
                     </div>
 
-                    <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-slate-600 hidden text-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex items-center justify-between">
+                    <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-slate-600 hidden text-center bg-carePrimaryLight/40 border border-carePrimary/20 p-2.5 rounded-lg flex items-center justify-between">
                         <span class="truncate">✓ セット済み: <span id="fileNameSpan" class="text-carePrimary font-bold"></span></span>
-                        <button onclick="clearAudioFile()" class="text-slate-400 hover:text-rose-500 p-1" title="削除">
+                        <button onclick="clearAudioFile()" class="text-slate-400 hover:text-rose-600 p-1" title="削除">
                             <span class="material-symbols-outlined text-base">close</span>
                         </button>
                     </div>
@@ -298,7 +298,6 @@
         let selectedAudioFile = null;
         let saveAutoCloseTimer = null;
 
-        // 🎙️ マイク直接録音関連のステート
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
@@ -365,7 +364,7 @@
             if (saveAutoCloseTimer) clearTimeout(saveAutoCloseTimer);
         }
 
-        /* 🎙️ 直接マイク録音機能 */
+        /* 🎙️ 直接マイク録音機能 (carecoreトンマナ統一) */
         async function toggleRecording() {
             const btn = document.getElementById('recBtn');
             const icon = document.getElementById('recIcon');
@@ -401,8 +400,7 @@
                     mediaRecorder.start();
                     isRecording = true;
 
-                    // UIの更新
-                    btn.className = "w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition shadow";
+                    btn.className = "w-full py-2.5 px-3 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition shadow";
                     icon.textContent = "stop";
                     btnText.textContent = "録音を停止する";
                     timerEl.classList.remove('hidden');
@@ -418,7 +416,6 @@
                     alert("マイクの使用が許可されなかったか、アクセスできませんでした: " + err.message);
                 }
             } else {
-                // 停止処理
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                     mediaRecorder.stop();
                     mediaRecorder.stream.getTracks().forEach(track => track.stop());
@@ -426,8 +423,7 @@
                 isRecording = false;
                 clearInterval(timerInterval);
 
-                // UIの復元
-                btn.className = "w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-rose-200";
+                btn.className = "w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-amber-200";
                 icon.textContent = "fiber_manual_record";
                 btnText.textContent = "録音を開始する";
                 timerEl.classList.add('hidden');
@@ -443,7 +439,7 @@
         function handleFileSelect(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const file = inputElement.files[0];
-                selectedAudioFile = file; // fileオブジェクト
+                selectedAudioFile = file;
                 document.getElementById('fileNameDisplay').classList.remove('hidden');
                 document.getElementById('fileNameSpan').textContent = file.name;
             }
@@ -522,13 +518,11 @@
                 let audioData = null;
                 if (selectedAudioFile) {
                     if (selectedAudioFile.base64) {
-                        // マイクで直接録音した場合（すでにbase64化済み）
                         audioData = {
                             mimeType: selectedAudioFile.type || 'audio/mp3',
                             base64: selectedAudioFile.base64
                         };
                     } else if (selectedAudioFile instanceof File) {
-                        // ファイル選択ダイアログからアップロードした場合
                         if (selectedAudioFile.size > 40 * 1024 * 1024) {
                             alert("音声ファイルのサイズが40MBを超えています。");
                             resetUI();
@@ -615,12 +609,17 @@
                 
                 historyArr.forEach(function(item) {
                     const html = `
-                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
-                            <span class="text-[10px] text-slate-400">#${item.id}</span>
+                    <div onclick="restoreHistory(${item.id})" class="history-item bg-white border border-careBorder p-3 rounded-lg shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 transition flex items-center justify-between group">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-bold text-slate-500">${item.meetingDate}</span>
+                                <span class="text-[10px] text-slate-400">#${item.id}</span>
+                            </div>
+                            <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
                         </div>
-                        <div class="font-bold text-slate-800 text-xs truncate">${item.clientName}</div>
+                        <button onclick="confirmDeleteHistory(event, ${item.id}, '${item.clientName}', '${item.meetingDate}')" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-md hover:bg-rose-50 transition" title="このログを削除">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
                     </div>`;
                     listDiv.innerHTML += html;
                 });
@@ -628,6 +627,20 @@
                 filterHistory();
             } catch (err) {
                 listDiv.innerHTML = '<div class="text-center text-rose-500 font-bold text-xs mt-5 p-3 bg-rose-50 rounded-lg">⚠️ 読込エラー<br>' + err.message + '</div>';
+            }
+        }
+
+        async function confirmDeleteHistory(event, rowId, clientName, meetingDate) {
+            event.stopPropagation(); // 復元イベントの発生を防止
+            if (!confirm(`「${clientName} 様 (${meetingDate})」の過去ログを削除してもよろしいですか？`)) {
+                return;
+            }
+            try {
+                const res = await callApi('deleteLog', { id: rowId });
+                showSaveSuccessModal('削除完了', res.message || '過去ログを削除しました');
+                loadHistory();
+            } catch (err) {
+                alert("削除に失敗しました: " + err.message);
             }
         }
 
