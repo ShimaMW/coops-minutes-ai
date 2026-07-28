@@ -317,11 +317,20 @@
             }
         }
 
-        window.onload = function() {
-            document.getElementById('meetingDate').valueAsDate = new Date();
-            document.getElementById('gasApiUrlInput').value = GAS_API_URL;
+        function initApp() {
+            const dateEl = document.getElementById('meetingDate');
+            if (dateEl && !dateEl.value) dateEl.valueAsDate = new Date();
+            const inputUrlEl = document.getElementById('gasApiUrlInput');
+            if (inputUrlEl) inputUrlEl.value = GAS_API_URL;
             loadHistory();
-        };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+        window.onload = initApp;
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
@@ -443,6 +452,8 @@
                 sidebar.classList.remove('sidebar-closed');
                 sidebar.classList.add('sidebar-open');
                 overlay.classList.remove('hidden');
+                // ⚡ サイドバーを開いた瞬間に自動で最新ログを取得・表示！
+                loadHistory();
             } else {
                 sidebar.classList.remove('sidebar-open');
                 sidebar.classList.add('sidebar-closed');
