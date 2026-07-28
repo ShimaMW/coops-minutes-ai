@@ -5,7 +5,7 @@
 function getGeminiApiKey() {
   const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (key && key.trim()) return key.trim();
-  return 'AIzaSyAMexlCd4FKuQuL1eyiLYhUMDopnuuECxc';
+  throw new Error('スクリプトプロパティに GEMINI_API_KEY が設定されていません。プロジェクト設定から新しいGemini APIキーを設定してください。');
 }
 
 function doGet(e) {
