@@ -35,11 +35,11 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .sidebar-open { transform: translateX(0%); }
         .sidebar-closed { transform: translateX(-100%); }
-        .tab-btn-active {
-            background-color: #7a6859;
-            color: #ffffff;
-            font-weight: 700;
+        @keyframes popupIn {
+            from { opacity: 0; transform: scale(0.9) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
+        .animate-popup { animation: popupIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body class="bg-careBg h-[100dvh] overflow-hidden flex flex-col">
@@ -236,6 +236,20 @@
         </section>
     </div>
 
+    <!-- ── 画面中央：保存完了モーダル ── -->
+    <div id="saveSuccessModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-careBorder text-center animate-popup">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-4xl">check_circle</span>
+            </div>
+            <h3 class="font-bold text-lg text-slate-800 mb-1" id="saveModalTitle">保存が完了しました！</h3>
+            <p class="text-xs text-slate-500 mb-6" id="saveModalMsg">データベースに保存されました。左上のメニューからいつでも呼び出せます。</p>
+            <button onclick="closeSaveSuccessModal()" class="w-full py-3 bg-carePrimary hover:bg-carePrimaryDark text-white rounded-xl font-bold text-sm shadow transition">
+                OK
+            </button>
+        </div>
+    </div>
+
     <!-- ── 設定モーダル ── -->
     <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-careBorder">
@@ -253,6 +267,7 @@
         const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
         let GAS_API_URL = localStorage.getItem('COOPS_GAS_API_URL') || DEFAULT_GAS_API_URL;
         let selectedAudioFile = null;
+        let saveAutoCloseTimer = null;
 
         async function callApi(action, payload = {}) {
             if (!GAS_API_URL) {
@@ -297,6 +312,21 @@
             localStorage.setItem('COOPS_GAS_API_URL', url);
             closeSettingsModal();
             loadHistory();
+        }
+
+        function showSaveSuccessModal(title, msg) {
+            document.getElementById('saveModalTitle').textContent = title || '保存が完了しました！';
+            document.getElementById('saveModalMsg').textContent = msg || 'データベースに保存されました。左上のメニューからいつでも呼び出せます。';
+            document.getElementById('saveSuccessModal').classList.remove('hidden');
+            if (saveAutoCloseTimer) clearTimeout(saveAutoCloseTimer);
+            saveAutoCloseTimer = setTimeout(() => {
+                closeSaveSuccessModal();
+            }, 3000);
+        }
+
+        function closeSaveSuccessModal() {
+            document.getElementById('saveSuccessModal').classList.add('hidden');
+            if (saveAutoCloseTimer) clearTimeout(saveAutoCloseTimer);
         }
 
         function handleFileSelect(inputElement) {
@@ -432,12 +462,14 @@
                     meetingDate, clientName, inputText, summary,
                     item1: out1, item2: out2, item3: out3, item4: out4
                 });
-                alert("✅ " + (res.message || "保存完了しました"));
                 saveBtn.innerHTML = origHtml;
                 saveBtn.disabled = false;
+                
+                // 画面中央に美しく保存完了モーダルを表示！
+                showSaveSuccessModal('データベースに保存完了しました！', res.message || '保存されました。左上のメニューからいつでも呼び出せます。');
                 loadHistory(); 
             } catch(err) {
-                alert(err.message);
+                alert("保存エラー: " + err.message);
                 saveBtn.innerHTML = origHtml;
                 saveBtn.disabled = false;
             }
