@@ -4,13 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>COOPs 議事録AI</title>
+  <title>COOPs 担当者会議議事録AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
     rel="stylesheet">
   <style>
-    /* ─── Variables ─── */
     :root {
       --bg: #374151;
       --card: #ffffff;
@@ -23,12 +22,10 @@
       --border-mid: #cbd5e1;
       --text: #1e293b;
       --text-muted: #64748b;
-      --text-light: #94a3b8;
       --danger: #ef4444;
       --success: #10b981;
       --amber: #f59e0b;
       --blue: #3b82f6;
-      --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.1);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.18);
       --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.22);
       --r-sm: 8px;
@@ -37,42 +34,23 @@
       --t: 0.18s ease;
     }
 
-    html {
-      overflow-x: hidden !important;
-      width: 100% !important;
-      position: relative;
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      width: 100% !important;
-      max-width: 100% !important;
-      overflow-x: hidden !important;
-      position: relative;
-      -webkit-text-size-adjust: 100%;
+      width: 100%;
+      overflow-x: hidden;
     }
 
     .msym {
       font-family: 'Material Symbols Outlined';
-      font-weight: normal;
-      font-style: normal;
       font-size: 20px;
       line-height: 1;
       display: inline-block;
       vertical-align: middle;
-      white-space: nowrap;
-      -webkit-font-smoothing: antialiased;
     }
 
     /* ─── Loading ─── */
@@ -89,1596 +67,358 @@
       gap: 16px;
       transition: opacity 0.3s;
     }
-
-    #loadingOverlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
+    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
     .loader-ring {
-      width: 52px;
-      height: 52px;
+      width: 52px; height: 52px;
       border: 3px solid rgba(255, 255, 255, 0.2);
       border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.85s linear infinite;
     }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .loader-text {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.88rem;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { color: rgba(255, 255, 255, 0.8); font-size: 0.88rem; }
 
     /* ─── Toast ─── */
     #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
+      position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--card);
-      border-radius: var(--r-md);
-      padding: 11px 24px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      box-shadow: var(--shadow-lg);
-      z-index: 8000;
+      background: var(--card); border-radius: var(--r-md);
+      padding: 11px 24px; font-size: 0.85rem; font-weight: 600;
+      box-shadow: var(--shadow-lg); z-index: 8000;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       pointer-events: none;
     }
-
-    #toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #toast.success {
-      color: var(--success);
-      border-left: 4px solid var(--success);
-    }
-
-    #toast.error {
-      color: var(--danger);
-      border-left: 4px solid var(--danger);
-    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { color: var(--success); border-left: 4px solid var(--success); }
+    #toast.error { color: var(--danger); border-left: 4px solid var(--danger); }
 
     /* ─── App Shell ─── */
     .app-shell {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px 14px 60px;
-      box-sizing: border-box;
-      overflow-x: hidden;
+      width: 100%; max-width: 860px;
+      margin: 0 auto; padding: 20px 14px 60px;
     }
 
-    /* ─── Header ─── */
     .app-header {
-      background: var(--clover);
-      color: #fff;
-      padding: 14px 20px;
-      border-radius: var(--r-lg);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-md);
+      background: var(--clover); color: #fff;
+      padding: 14px 20px; border-radius: var(--r-lg);
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; box-shadow: var(--shadow-md);
     }
+    .app-header h1 { font-size: 1.05rem; font-weight: 700; }
+    .app-header p { font-size: 0.72rem; color: rgba(255, 255, 255, 0.65); }
 
-    .app-header img {
-      height: 32px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    .header-sep {
-      width: 1px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.25);
-      flex-shrink: 0;
-    }
-
-    .app-header h1 {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .app-header p {
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.65);
-    }
-
-    .header-actions {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .header-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .btn-settings {
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #fff;
-      padding: 5px 9px;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: background var(--t);
-    }
-    .btn-settings:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    /* ─── Tabs ─── */
-    .tabs {
-      display: flex;
-      gap: 4px;
-    }
-
+    .tabs { display: flex; gap: 4px; }
     .tab-btn {
-      flex: 1;
-      padding: 10px 8px;
-      border: none;
-      background: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.65);
-      font-family: inherit;
-      font-size: 0.82rem;
-      font-weight: 500;
-      cursor: pointer;
-      border-radius: var(--r-sm) var(--r-sm) 0 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      flex: 1; padding: 11px 8px; border: none;
+      background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.65);
+      font-family: inherit; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; border-radius: var(--r-sm) var(--r-sm) 0 0;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
       transition: all var(--t);
     }
+    .tab-btn.active { background: var(--card); color: var(--clover); font-weight: 700; }
 
-    .tab-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: rgba(255, 255, 255, 0.88);
-    }
-
-    .tab-btn.active {
-      background: var(--card);
-      color: var(--clover);
-      font-weight: 700;
-    }
-
-    /* ─── Card ─── */
     .tab-content {
-      display: none;
-      background: var(--card);
+      display: none; background: var(--card);
       border-radius: 0 0 var(--r-lg) var(--r-lg);
-      padding: 24px 22px;
-      box-shadow: var(--shadow-lg);
-      animation: fadeUp 0.22s ease;
+      padding: 24px 22px; box-shadow: var(--shadow-lg);
     }
+    .tab-content.active { display: block; }
 
-    .tab-content.active {
-      display: block;
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .form-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+    .form-row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-bottom: 14px; }
+
+    input[type=text], input[type=date], textarea {
+      width: 100%; background: var(--card-sub);
+      border: 1px solid var(--border); border-radius: var(--r-sm);
+      color: var(--text); font-family: inherit; font-size: 0.95rem;
+      padding: 10px 12px; outline: none; transition: border var(--t);
     }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ─── Step Indicator ─── */
-    .step-indicator {
-      display: flex;
-      align-items: center;
-      margin-bottom: 22px;
-    }
-
-    .step-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .step-item:last-child {
-      flex: 0;
-    }
-
-    .step-circle {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      border: 2px solid var(--border-mid);
-      color: var(--text-muted);
-      transition: all var(--t);
-    }
-
-    .step-circle.active {
-      border-color: var(--clover);
-      color: var(--clover);
-      background: var(--clover-dim);
-    }
-
-    .step-circle.done {
-      border-color: var(--clover);
-      background: var(--clover);
-      color: #fff;
-    }
-
-    .step-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    .step-label.active {
-      color: var(--clover);
-      font-weight: 600;
-    }
-
-    .step-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-      margin: 0 8px;
-      transition: background var(--t);
-    }
-
-    .step-line.done {
-      background: var(--clover);
-    }
-
-    /* ─── Form ─── */
-    .form-row {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .form-row.col2 {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .form-row.col3 {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .form-label {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .form-label .req {
-      color: var(--danger);
-    }
-
-    input[type=text],
-    input[type=date],
-    select,
-    textarea {
-      width: 100%;
-      max-width: 100%;
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.95rem;
-      padding: 10px 12px;
-      outline: none;
-      box-sizing: border-box;
-      transition: border var(--t), box-shadow var(--t);
-    }
-
-    select {
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    input[type=text]:focus,
-    input[type=date]:focus,
-    select:focus,
-    textarea:focus {
-      border-color: var(--clover);
-      box-shadow: 0 0 0 3px var(--clover-dim);
-    }
-
-    select option {
-      background: #fff;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 88px;
-      line-height: 1.6;
-    }
-
-    /* ─── Recall Toggle ─── */
-    .recall-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      background: var(--clover-dim);
-      border: 1px solid var(--clover-mid);
-      border-radius: var(--r-md);
-      margin-bottom: 16px;
-    }
-
-    .recall-bar label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--clover);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .recall-bar input[type=checkbox] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--clover);
-      cursor: pointer;
-    }
-
-    #recallSelect {
-      flex: 1;
-      margin: 0;
-    }
-
-    /* ─── Participant Grid ─── */
-    .participant-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 7px;
-      max-height: 200px;
-      overflow-y: auto;
-      padding: 2px;
-      margin-top: 6px;
-    }
-
-    .participant-check {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: var(--r-sm);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-      background: var(--card-sub);
-      transition: all var(--t);
-    }
-
-    .participant-check:hover {
-      border-color: var(--clover);
-      background: var(--clover-dim);
-    }
-
-    .participant-check input[type=checkbox] {
-      display: none;
-    }
-
-    .check-box {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      border-radius: 4px;
-      border: 1.5px solid var(--border-mid);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--t);
-    }
-
-    .participant-check.checked .check-box {
-      background: var(--clover);
+    input[type=text]:focus, input[type=date]:focus, textarea:focus {
       border-color: var(--clover);
     }
-
-    .participant-check.checked .check-box::after {
-      content: '✓';
-      font-size: 10px;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .participant-check.checked {
-      border-color: var(--clover);
-      background: var(--clover-dim);
-    }
-
-    .check-name {
-      font-size: 0.8rem;
-    }
-
-    .check-role {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-    }
-
-    .no-participants {
-      padding: 16px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-
-    /* ─── Audio Cards ─── */
-    .audio-area {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
 
     .audio-card {
-      border: 2px dashed var(--border-mid);
-      border-radius: var(--r-md);
-      padding: 18px 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: all var(--t);
-      background: var(--card-sub);
-    }
-
-    .audio-card:hover {
-      border-color: var(--clover);
-      background: var(--clover-dim);
-    }
-
-    .audio-card.active-audio {
-      border-color: var(--clover);
-      border-style: solid;
-      background: var(--clover-dim);
-    }
-
-    #audioFileInput {
-      display: none;
-    }
-
-    .audio-icon {
-      font-size: 1.8rem;
-      margin-bottom: 6px;
-    }
-
-    .audio-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-
-    .audio-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    .audio-ready {
-      font-size: 0.72rem;
-      color: var(--success);
-      margin-top: 4px;
-      font-weight: 600;
-    }
-
-    /* ─── Buttons ─── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 18px;
-      border-radius: var(--r-sm);
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.83rem;
-      font-weight: 700;
-      transition: all var(--t);
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: var(--clover);
-      color: #fff;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-primary:hover {
-      background: var(--clover-h);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
-    .btn-secondary {
-      background: var(--card-sub);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--clover);
-      color: var(--clover);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border-mid);
-    }
-
-    .btn-ghost:hover {
-      color: var(--text);
-      border-color: var(--text-muted);
-    }
-
-    .btn-amber {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--amber);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-
-    .btn-amber:hover {
-      background: var(--amber);
-      color: #fff;
-    }
-
-    .btn-blue {
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--blue);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-
-    .btn-blue:hover {
-      background: var(--blue);
-      color: #fff;
-    }
-
-    .btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* ─── Action Row ─── */
-    .action-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
-
-    .step-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
-    .sec-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* ─── Result Cards ─── */
-    .result-meta {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .meta-pill {
-      padding: 3px 10px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      font-size: 0.72rem;
-      background: var(--card-sub);
-    }
-
-    .summary-card {
-      background: var(--clover-dim);
-      border: 1px solid var(--clover-mid);
-      border-left: 4px solid var(--clover);
-      border-radius: var(--r-md);
-      padding: 16px 18px;
+      border: 2px dashed var(--border-mid); border-radius: var(--r-md);
+      padding: 18px 14px; text-align: center; cursor: pointer;
+      background: var(--card-sub); transition: all var(--t);
       margin-bottom: 14px;
     }
+    .audio-card:hover { border-color: var(--clover); background: var(--clover-dim); }
+    .audio-card.active-audio { border-color: var(--clover); border-style: solid; background: var(--clover-dim); }
 
-    .summary-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--clover);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px 20px; border-radius: var(--r-sm); border: none;
+      cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 700;
+      transition: all var(--t);
     }
-
-    .editable-result {
-      width: 100%;
-      min-height: 80px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      padding: 12px 14px;
-      font-family: inherit;
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: var(--text);
-      resize: vertical;
-      outline: none;
-      transition: border var(--t), box-shadow var(--t);
-    }
-
-    .editable-result:focus {
-      border-color: var(--clover);
-      box-shadow: 0 0 0 3px var(--clover-dim);
-    }
+    .btn-primary { background: var(--clover); color: #fff; }
+    .btn-primary:hover { background: var(--clover-h); }
+    .btn-secondary { background: var(--card-sub); color: var(--text); border: 1px solid var(--border); }
+    .btn-amber { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
 
     .section-card {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--clover);
-      border-radius: var(--r-md);
-      padding: 14px 16px;
-      margin-bottom: 10px;
+      background: var(--card-sub); border: 1px solid var(--border);
+      border-left: 4px solid var(--clover); border-radius: var(--r-md);
+      padding: 14px 16px; margin-bottom: 12px;
     }
+    .section-title { font-size: 0.9rem; font-weight: 700; color: var(--clover); margin-bottom: 6px; }
 
-    .section-card.discussions { border-left-color: var(--blue); }
-    .section-card.actions { border-left-color: var(--success); }
-    .section-card.culture { border-left-color: var(--clover); }
-    .section-card.next { border-left-color: var(--amber); }
-    .section-card.feedback {
-      background: rgba(245, 158, 11, 0.05);
-      border: 1px solid rgba(245, 158, 11, 0.22);
-      border-left: 3px solid var(--amber);
-    }
-
-    .section-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .section-card-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .copy-btn {
-      background: none;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 0.72rem;
-      padding: 3px 8px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      transition: all var(--t);
-      font-family: inherit;
-    }
-
-    .copy-btn:hover {
-      border-color: var(--clover);
-      color: var(--clover);
-    }
-
-    /* ─── Duration Chips ─── */
-    .chip-group {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-top: 5px;
-    }
-
-    .chip {
-      padding: 5px 13px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--card-sub);
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all var(--t);
-      font-family: inherit;
-    }
-
-    .chip.selected {
-      border-color: var(--clover);
-      background: var(--clover-dim);
-      color: var(--clover);
-      font-weight: 700;
-    }
-
-    /* ─── Agenda Result Blocks ─── */
-    .agenda-block {
-      border-radius: var(--r-md);
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--clover);
-    }
-
-    .agenda-block.purpose { border-left-color: var(--clover); }
-    .agenda-block.outcome { border-left-color: var(--blue); }
-    .agenda-block.review { border-left-color: var(--amber); }
-    .agenda-block.items { border-left-color: var(--border-mid); }
-    .agenda-block.closing { border-left-color: var(--success); }
-
-    .agenda-block-label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* ─── History Table ─── */
-    .filter-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .filter-bar select {
-      flex: 1;
-      min-width: 130px;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: var(--r-md);
-      border: 1px solid var(--border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
-    th {
-      background: var(--clover);
-      color: #fff;
-      padding: 10px 12px;
-      text-align: left;
-      font-size: 0.75rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 9px 12px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    tr:last-child td { border-bottom: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { background: var(--clover); color: #fff; padding: 10px 12px; text-align: left; }
+    td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
     tr:hover td { background: var(--clover-dim); }
 
-    .status-badge {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 0.68rem;
-      font-weight: 700;
-    }
-
-    .status-badge.agenda-only {
-      background: var(--clover-dim);
-      color: var(--clover);
-      border: 1px solid var(--clover-mid);
-    }
-
-    .status-badge.done {
-      background: var(--clover);
-      color: #fff;
-      border: 1px solid var(--clover);
-    }
-
     .tbl-btn {
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all var(--t);
+      padding: 4px 10px; border-radius: 6px; font-size: 0.72rem;
+      font-weight: 600; border: 1px solid var(--clover); background: #fff;
+      color: var(--clover); cursor: pointer;
     }
+    .tbl-btn:hover { background: var(--clover-dim); }
 
-    .tbl-btn.agenda {
-      background: #fff;
-      color: var(--clover);
-      border: 1px solid var(--clover);
-    }
-    .tbl-btn.agenda:hover { background: var(--clover-dim); }
-
-    .tbl-btn.minutes {
-      background: var(--clover);
-      color: #fff;
-      border: 1px solid var(--clover);
-    }
-    .tbl-btn.minutes:hover { background: var(--clover-h); }
-
-    .tbl-btn:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
-
-    .history-empty {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-muted);
-    }
-
-    /* ─── Employee Panel ─── */
-    .emp-panel {
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-
-    .emp-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 14px;
-      cursor: pointer;
-      background: var(--card-sub);
-      transition: background var(--t);
-    }
-    .emp-panel-header:hover { background: var(--clover-dim); }
-
-    .emp-panel-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .emp-panel-arrow {
-      transition: transform var(--t);
-      color: var(--text-light);
-    }
-    .emp-panel-arrow.open { transform: rotate(180deg); }
-
-    .emp-panel-body {
-      padding: 14px;
-      border-top: 1px solid var(--border);
-      display: none;
-    }
-    .emp-panel-body.open { display: block; }
-
-    .emp-form-row {
-      display: grid;
-      grid-template-columns: 2fr 2fr 2fr auto;
-      gap: 8px;
-      align-items: end;
-    }
-
-    /* ─── Modal ─── */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 7000;
-      background: rgba(45, 55, 72, 0.72);
-      backdrop-filter: blur(4px);
-      align-items: flex-start;
-      justify-content: center;
-      padding: 20px;
-      overflow-y: auto;
+      display: none; position: fixed; inset: 0; z-index: 7000;
+      background: rgba(45, 55, 72, 0.72); backdrop-filter: blur(4px);
+      align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto;
     }
-
     .modal-overlay.open { display: flex; }
-
     .modal-box {
-      background: var(--card);
-      border-radius: var(--r-lg);
-      width: 100%;
-      max-width: 760px;
-      margin: auto;
-      padding: 24px;
+      background: var(--card); border-radius: var(--r-lg);
+      width: 100%; max-width: 760px; margin: auto; padding: 24px;
       box-shadow: var(--shadow-lg);
-      animation: fadeUp 0.22s ease;
     }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .modal-title { font-size: 1rem; font-weight: 700; color: var(--clover); }
+    .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); }
 
-    .modal-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .modal-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--clover);
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 1.3rem;
-      transition: color var(--t);
-      line-height: 1;
-    }
-    .modal-close:hover { color: var(--danger); }
-
-    .modal-meta {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 14px 0;
-    }
-
-    .mt8 { margin-top: 8px; }
+    .action-row { display: flex; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
     .hidden { display: none !important; }
-    .text-muted-sm {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      margin-top: 5px;
-    }
-
-    /* ─── Print ─── */
-    @media print {
-      body { background: #fff; color: #000; font-size: 10pt; }
-      .app-shell { max-width: 100%; padding: 0; }
-      .app-header, .tabs, .tab-content:not(.active), .action-row, .step-nav,
-      .step-indicator, .filter-bar, .emp-panel, #loadingOverlay, #toast,
-      .modal-overlay, .btn, .copy-btn, .tbl-btn, .no-print {
-        display: none !important;
-      }
-      .tab-content.active { display: block !important; box-shadow: none; padding: 0; border-radius: 0; }
-      .print-header { display: block !important; }
-      .section-card, .summary-card, .agenda-block, .editable-result { break-inside: avoid; }
-      .editable-result { border: 1px solid #ccc; background: #fff; }
-    }
-
-    .print-header {
-      display: none;
-      border-bottom: 2px solid #354045;
-      margin-bottom: 16px;
-      padding-bottom: 10px;
-    }
-
-    .print-header h1 { font-size: 14pt; color: #354045; }
-    .print-header p { font-size: 9pt; color: #666; }
 
     @media (max-width: 480px) {
-      .app-shell { width: 100%; max-width: 100vw; padding: 10px 4px 40px; }
-      .app-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .header-actions { margin-left: 0; width: 100%; justify-content: space-between; }
-      .header-sep { display: none; }
-      .tab-btn { padding: 8px 2px; font-size: 0.65rem; flex-direction: column; gap: 2px; }
-      .form-row.col2, .form-row.col3 { grid-template-columns: 1fr; gap: 12px; }
-      .tab-content { padding: 16px 12px; }
-      .audio-area { grid-template-columns: 1fr; }
-      .btn { white-space: normal; height: auto; padding: 12px 14px; width: 100%; }
-      .action-row { flex-direction: column; }
-      .step-indicator { flex-direction: column; gap: 12px; }
-      .step-indicator .step-line { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .btn { width: 100%; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Loading -->
   <div id="loadingOverlay">
     <div class="loader-ring"></div>
     <div class="loader-text" id="loadingText">データを読み込んでいます...</div>
   </div>
 
-  <!-- Toast -->
   <div id="toast"></div>
 
   <div class="app-shell">
 
-    <!-- Header -->
     <header class="app-header">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span class="msym" style="font-size:28px;">clinical_notes</span>
-        <div>
-          <h1>COOPs 議事録AI</h1>
-          <p>介護事業所向け AIミーティングアシスタント</p>
-        </div>
+      <div>
+        <h1>COOPs 担当者会議議事録AI</h1>
+        <p>サービス担当者会議 議事録自動作成アシスタント</p>
       </div>
-      <div class="header-actions">
-        <div class="header-badge">
-          <span class="msym" style="font-size:13px;">smart_toy</span>v4.0 API
-        </div>
-        <button class="btn-settings" onclick="openModal('settingsModal')">
-          <span class="msym" style="font-size:15px;">settings</span>設定
-        </button>
-      </div>
+      <button class="btn btn-secondary" style="font-size:0.75rem; padding:4px 10px;" onclick="openModal('settingsModal')">
+        <span class="msym" style="font-size:16px;">settings</span>設定
+      </button>
     </header>
 
-    <!-- Tabs -->
     <nav class="tabs">
-      <button class="tab-btn active" onclick="switchTab('agenda')" id="tab-btn-agenda">
-        <span class="msym" style="font-size:17px;">event_note</span>アジェンダ作成
-      </button>
-      <button class="tab-btn" onclick="switchTab('minutes')" id="tab-btn-minutes">
+      <button class="tab-btn active" onclick="switchTab('create')" id="tab-btn-create">
         <span class="msym" style="font-size:17px;">edit_note</span>議事録作成
       </button>
       <button class="tab-btn" onclick="switchTab('history')" id="tab-btn-history">
-        <span class="msym" style="font-size:17px;">table_view</span>ログ一覧
+        <span class="msym" style="font-size:17px;">table_view</span>過去ログ一覧
       </button>
     </nav>
 
-    <!-- ══ TAB: アジェンダ作成 ══ -->
-    <div id="tab-agenda" class="tab-content active">
+    <!-- ══ TAB: 作成 ══ -->
+    <div id="tab-create" class="tab-content active">
 
-      <!-- 印刷ヘッダー -->
-      <div class="print-header" id="agendaPrintHeader">
-        <h1 id="agendaPrintTitle">アジェンダ</h1>
-        <p id="agendaPrintMeta"></p>
-      </div>
-
-      <div id="agendaForm">
-        <div class="form-row col2">
-          <div class="form-group">
-            <label class="form-label">📅 会議予定日</label>
-            <input type="date" id="agendaDate">
-          </div>
-          <div class="form-group">
-            <label class="form-label">🏢 部署 <span class="req">*</span></label>
-            <select id="agendaDept" onchange="onAgendaDeptChange()">
-              <option value="">― 選択してください ―</option>
-            </select>
-          </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">📅 会議開催日</label>
+          <input type="date" id="meetingDate">
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">📋 会議種別 <span class="req">*</span></label>
-            <select id="agendaType">
-              <option value="">― 選択してください ―</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group mt8">
-          <label class="form-label">👥 参加者</label>
-          <div id="agendaParticipantGrid" class="participant-grid">
-            <div class="no-participants">部署を選択すると参加者が表示されます</div>
-          </div>
-        </div>
-        <div class="form-group mt8">
-          <label class="form-label">👤 対象利用者名（カンファレンス等）</label>
-          <input type="text" id="agendaClientName" placeholder="例：田中 花子 様">
-        </div>
-        <div class="form-group mt8">
-          <label class="form-label">⏱️ 想定所要時間</label>
-          <div class="chip-group" id="durationChips">
-            <button class="chip" onclick="selectChip(this,'30分')">30分</button>
-            <button class="chip" onclick="selectChip(this,'45分')">45分</button>
-            <button class="chip" onclick="selectChip(this,'1時間')">1時間</button>
-            <button class="chip" onclick="selectChip(this,'1時間30分')">1時間30分</button>
-            <button class="chip" onclick="selectChip(this,'2時間')">2時間</button>
-          </div>
-        </div>
-        <div class="form-group mt8">
-          <label class="form-label">📝 今回話したいこと・背景・前回からの課題</label>
-          <textarea id="agendaTopics" rows="5"
-            placeholder="例：&#10;・今月のヒヤリハット件数が増加している&#10;・新スタッフ2名の業務分担を決定したい&#10;・前回の送迎ルート変更の最終確認"></textarea>
-        </div>
-        <div style="text-align:center; margin-top:18px;">
-          <button class="btn btn-primary" onclick="runGenerateAgenda()" style="min-width:200px;">
-            <span class="msym" style="font-size:17px;">auto_awesome</span>アジェンダを生成する
-          </button>
+        <div class="form-group">
+          <label class="form-label">👤 対象利用者名</label>
+          <input type="text" id="clientName" placeholder="例：山田 太郎 様">
         </div>
       </div>
 
-      <!-- 生成結果 -->
-      <div id="agendaResult" class="hidden" style="margin-top:20px;">
-        <div class="divider"></div>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-          <h3 style="font-size:0.95rem; font-weight:700; color:var(--clover); display:flex; align-items:center; gap:8px;">
-            <span class="msym">check_circle</span>アジェンダが生成されました
-          </h3>
-          <button class="btn btn-ghost" onclick="resetAgenda()" style="font-size:0.75rem;">
-            <span class="msym" style="font-size:15px;">restart_alt</span>再入力
-          </button>
+      <div class="form-group">
+        <label class="form-label">📝 メモ・テキスト起こしデータ</label>
+        <textarea id="inputText" placeholder="会議中のメモや発言内容、議題のテキストを入力してください。"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🎙️ 録音音声ファイル（任意）</label>
+        <div class="audio-card" id="uploadCard" onclick="document.getElementById('fileInput').click()">
+          <div style="font-size:1.8rem; margin-bottom:4px;">🗂️</div>
+          <div style="font-size:0.85rem; font-weight:600;">音声ファイルを選択 (.mp3, .m4a, .wav等)</div>
+          <div id="uploadStatus" style="font-size:0.75rem; color:var(--success); margin-top:4px;" class="hidden"></div>
+          <input type="file" id="fileInput" accept="audio/*" onchange="handleUploadFile(event)" style="display:none;">
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:18px;">
+        <button class="btn btn-primary" onclick="runGenerateMinutes()" style="min-width:220px;">
+          <span class="msym" style="font-size:18px;">auto_awesome</span>AI議事録を生成する
+        </button>
+      </div>
+
+      <!-- 結果表示 -->
+      <div id="resultArea" class="hidden" style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+        <h3 style="font-size:1rem; font-weight:700; color:var(--clover); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+          <span class="msym">check_circle</span>生成結果
+        </h3>
+
+        <div class="section-card">
+          <div class="section-title">📌 1. 会議要約（全体まとめ）</div>
+          <textarea class="editable-result" id="res_summary" rows="4"></textarea>
         </div>
 
-        <div class="agenda-block purpose">
-          <div class="agenda-block-label" style="color:var(--clover);">🎯 目的（Purpose）</div>
-          <textarea class="editable-result" id="agOut_purpose" rows="3"></textarea>
+        <div class="section-card">
+          <div class="section-title">🎯 2. 開催目的・検討議題 (item1)</div>
+          <textarea class="editable-result" id="res_item1" rows="4"></textarea>
         </div>
-        <div class="agenda-block outcome">
-          <div class="agenda-block-label" style="color:var(--blue);">🏁 達成したい成果（Outcome）</div>
-          <textarea class="editable-result" id="agOut_outcome" rows="3"></textarea>
+
+        <div class="section-card">
+          <div class="section-title">💡 3. 発言内容・主な議論 (item2)</div>
+          <textarea class="editable-result" id="res_item2" rows="6"></textarea>
         </div>
-        <div class="agenda-block review" id="agOut_reviewBlock">
-          <div class="agenda-block-label" style="color:var(--amber);">🔄 前回の振り返り</div>
-          <textarea class="editable-result" id="agOut_review" rows="2"></textarea>
+
+        <div class="section-card">
+          <div class="section-title">✨ 4. 合意・決定事項・理由 (item3)</div>
+          <textarea class="editable-result" id="res_item3" rows="5"></textarea>
         </div>
-        <div class="agenda-block items">
-          <div class="agenda-block-label">📋 各議題（AIアドバイス含む）</div>
-          <textarea class="editable-result" id="agOut_items" rows="8"></textarea>
-        </div>
-        <div class="agenda-block closing">
-          <div class="agenda-block-label" style="color:var(--success);">🏁 クロージング</div>
-          <textarea class="editable-result" id="agOut_closing" rows="2"></textarea>
+
+        <div class="section-card">
+          <div class="section-title">🎉 5. 今後の課題・次回予定 (item4)</div>
+          <textarea class="editable-result" id="res_item4" rows="4"></textarea>
         </div>
 
         <div class="action-row">
-          <button class="btn btn-primary" onclick="runSaveAgenda()">
-            <span class="msym" style="font-size:16px;">cloud_upload</span>保存する
+          <button class="btn btn-primary" onclick="runSaveLog()">
+            <span class="msym" style="font-size:16px;">cloud_upload</span>データベースに保存
           </button>
-          <button class="btn btn-secondary" onclick="copyAgendaText()">
-            <span class="msym" style="font-size:16px;">content_copy</span>テキストをコピー
+          <button class="btn btn-secondary" onclick="copyFullMinutes()">
+            <span class="msym" style="font-size:16px;">content_copy</span>テキストコピー
           </button>
-          <button class="btn btn-amber" onclick="printAgenda()">
-            <span class="msym" style="font-size:16px;">print</span>印刷する
-          </button>
-        </div>
-      </div>
-    </div><!-- /tab-agenda -->
-
-
-    <!-- ══ TAB: 議事録作成 ══ -->
-    <div id="tab-minutes" class="tab-content">
-
-      <!-- 印刷ヘッダー -->
-      <div class="print-header" id="minutesPrintHeader">
-        <h1 id="minutesPrintTitle">議事録</h1>
-        <p id="minutesPrintMeta"></p>
-      </div>
-
-      <!-- Step Indicator -->
-      <div class="step-indicator">
-        <div class="step-item">
-          <div class="step-circle active" id="sc1">1</div>
-          <div class="step-label active" id="sl1">会議情報</div>
-        </div>
-        <div class="step-line" id="line1"></div>
-        <div class="step-item">
-          <div class="step-circle" id="sc2">2</div>
-          <div class="step-label" id="sl2">入力</div>
-        </div>
-        <div class="step-line" id="line2"></div>
-        <div class="step-item" style="flex:0">
-          <div class="step-circle" id="sc3">3</div>
-          <div class="step-label" id="sl3">議事録</div>
-        </div>
-      </div>
-
-      <!-- STEP 1 -->
-      <div id="step1">
-        <!-- アジェンダ呼び起こし -->
-        <div class="recall-bar">
-          <label>
-            <input type="checkbox" id="recallToggle" onchange="onRecallToggle()">
-            <span class="msym" style="font-size:17px; color:var(--clover);">link</span>
-            アジェンダから呼び起こす
-          </label>
-          <select id="recallSelect" class="hidden" onchange="onRecallSelect()">
-            <option value="">― アジェンダを選択 ―</option>
-          </select>
-        </div>
-
-        <div class="form-row col2">
-          <div class="form-group">
-            <label class="form-label">📅 会議日 <span class="req">*</span></label>
-            <input type="date" id="meetingDate">
-          </div>
-          <div class="form-group">
-            <label class="form-label">🏢 部署 <span class="req">*</span></label>
-            <select id="deptSelect" onchange="onDeptChange()">
-              <option value="">― 選択してください ―</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">📋 会議種別 <span class="req">*</span></label>
-            <select id="meetingTypeSelect">
-              <option value="">― 選択してください ―</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group mt8" style="margin-bottom:14px;">
-          <label class="form-label">👥 参加者</label>
-          <div id="participantGrid" class="participant-grid">
-            <div class="no-participants">部署を選択すると参加者が表示されます</div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">👤 対象利用者名（カンファレンス等）</label>
-            <input type="text" id="clientName" placeholder="例：田中 花子 様">
-          </div>
-        </div>
-        <div class="step-nav">
-          <div></div>
-          <button class="btn btn-primary" onclick="goToStep(2)">
-            次へ：入力データ <span class="msym" style="font-size:16px;">arrow_forward</span>
+          <button class="btn btn-amber" onclick="window.print()">
+            <span class="msym" style="font-size:16px;">print</span>印刷
           </button>
         </div>
       </div>
 
-      <!-- STEP 2 -->
-      <div id="step2" class="hidden">
-        <div class="sec-label"><span class="msym" style="font-size:15px;">notes</span>テキストメモ（任意）</div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <textarea id="inputText" rows="5" placeholder="議題のメモ、会議の流れ、発言内容のテキスト起こしなどをここに入力してください。"></textarea>
-        </div>
-        <div class="sec-label mt8"><span class="msym" style="font-size:15px;">attach_file</span>参考ファイル（メディア・ドキュメント）
-        </div>
-        <div class="audio-area">
-          <div class="audio-card" id="uploadCard" onclick="document.getElementById('fileInput').click()">
-            <div class="audio-icon">🗂️</div>
-            <div class="audio-title">ローカルファイルを選択</div>
-            <div class="audio-sub">音声・PDF・テキスト(.txt)</div>
-            <div id="uploadStatus" class="audio-ready hidden"></div>
-            <input type="file" id="fileInput" accept="audio/*,application/pdf,text/plain,.csv,.docx"
-              onchange="handleUploadFile(event)" style="display:none;">
-          </div>
-          <div class="audio-card" onclick="openDriveModal()">
-            <div class="audio-icon">☁️</div>
-            <div class="audio-title">Driveから抽出</div>
-            <div class="audio-sub">Google Docs等の文章を取り込む</div>
-          </div>
-        </div>
-        <div class="step-nav">
-          <button class="btn btn-ghost" onclick="goToStep(1)">
-            <span class="msym" style="font-size:16px;">arrow_back</span>戻る
-          </button>
-          <button class="btn btn-primary" onclick="runGenerateMinutes()" id="generateBtn">
-            <span class="msym" style="font-size:16px;">bolt</span>AI議事録を生成する
-          </button>
-        </div>
-      </div>
+    </div>
 
-      <!-- STEP 3 -->
-      <div id="step3" class="hidden">
-        <div id="minutesResult"></div>
-      </div>
-
-    </div><!-- /tab-minutes -->
-
-
-    <!-- ══ TAB: ログ一覧 ══ -->
+    <!-- ══ TAB: 履歴 ══ -->
     <div id="tab-history" class="tab-content">
-
-      <!-- 従業員マスタ -->
-      <div class="emp-panel">
-        <div class="emp-panel-header" onclick="toggleEmpPanel()">
-          <div class="emp-panel-title">
-            <span class="msym" style="font-size:16px;">group</span>従業員マスタ管理
-          </div>
-          <span class="msym emp-panel-arrow" id="empArrow">expand_more</span>
-        </div>
-        <div class="emp-panel-body" id="empBody">
-          <div class="emp-form-row">
-            <div class="form-group">
-              <label class="form-label">部署名</label>
-              <input type="text" id="newEmpDept" placeholder="訪問介護">
-            </div>
-            <div class="form-group">
-              <label class="form-label">氏名</label>
-              <input type="text" id="newEmpName" placeholder="山田 花子">
-            </div>
-            <div class="form-group">
-              <label class="form-label">役職</label>
-              <input type="text" id="newEmpRole" placeholder="管理者">
-            </div>
-            <div>
-              <button class="btn btn-primary" onclick="submitAddEmployee()" style="height:38px;">追加</button>
-            </div>
-          </div>
-          <p class="text-muted-sm">※ 追加後にアジェンダ・議事録タブの参加者リストへ反映されます</p>
-        </div>
-      </div>
-
-      <!-- フィルタ -->
-      <div class="filter-bar no-print">
-        <select id="filterDept" onchange="loadHistory()">
-          <option value="all">すべての部署</option>
-        </select>
-        <select id="filterType" onchange="loadHistory()">
-          <option value="all">すべての会議種別</option>
-        </select>
-        <button class="btn btn-secondary" onclick="loadHistory()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:0.95rem; font-weight:700;">過去の議事録ログ一覧</h3>
+        <button class="btn btn-secondary" style="font-size:0.75rem; padding:4px 10px;" onclick="loadHistory()">
           <span class="msym" style="font-size:15px;">refresh</span>更新
         </button>
       </div>
 
-      <!-- テーブル -->
-      <div class="table-wrap">
-        <table id="historyTable">
+      <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--r-md);">
+        <table>
           <thead>
             <tr>
+              <th>登録日時</th>
               <th>会議日</th>
-              <th>部署</th>
-              <th>会議種別</th>
-              <th>参加者</th>
-              <th>ステータス</th>
-              <th style="text-align:center;">アジェンダ</th>
-              <th style="text-align:center;">議事録</th>
-              <th style="text-align:center;">削除</th>
+              <th>利用者名</th>
+              <th style="text-align:center;">詳細</th>
             </tr>
           </thead>
           <tbody id="historyTbody">
-            <tr>
-              <td colspan="8" class="history-empty">読み込み中...</td>
-            </tr>
+            <tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
 
-    </div><!-- /tab-history -->
+  </div>
 
-  </div><!-- /app-shell -->
-
+  <!-- ── 詳細モーダル ── -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="detailModalTitle">議事録詳細</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" id="detailModalSub"></div>
+        </div>
+        <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+      </div>
+      <div id="detailModalBody"></div>
+      <div class="action-row" style="margin-top:16px;">
+        <button class="btn btn-amber" onclick="window.print()">
+          <span class="msym" style="font-size:15px;">print</span>印刷
+        </button>
+        <button class="btn btn-secondary" onclick="closeModal('detailModal')">閉じる</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── 設定モーダル ── -->
   <div class="modal-overlay" id="settingsModal">
-    <div class="modal-box" style="max-width: 540px;">
+    <div class="modal-box" style="max-width: 520px;">
       <div class="modal-header">
-        <div class="modal-title">⚙️ GAS API エンドポイント設定</div>
+        <div class="modal-title">⚙️ GAS API 設定</div>
         <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
       </div>
-      <div style="margin-bottom:14px;">
-        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
-          GASを「ウェブアプリ」としてデプロイした際の「ウェブアプリURL」を入力してください。
-        </p>
-        <div class="form-group">
-          <label class="form-label">GAS Web App URL</label>
-          <input type="text" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-        </div>
+      <div class="form-group">
+        <label class="form-label">GAS Web App URL</label>
+        <input type="text" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
       <div class="action-row">
         <button class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
-        <button class="btn btn-ghost" onclick="closeModal('settingsModal')">閉じる</button>
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal')">閉じる</button>
       </div>
     </div>
   </div>
 
-  <!-- ── アジェンダモーダル ── -->
-  <div class="modal-overlay" id="agendaModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title" id="agendaModalTitle">アジェンダ</div>
-        <button class="modal-close" onclick="closeModal('agendaModal')">✕</button>
-      </div>
-      <div class="modal-meta" id="agendaModalMeta"></div>
-      <div id="agendaModalBody" style="font-size:0.95rem; line-height:1.8; white-space:pre-wrap; color:var(--text);">
-      </div>
-      <div class="action-row" style="margin-top:14px;">
-        <button class="btn btn-amber" onclick="window.print()">
-          <span class="msym" style="font-size:15px;">print</span>印刷
-        </button>
-        <button class="btn btn-blue" id="agendaModalDocsBtn">
-          <span class="msym" style="font-size:15px;">open_in_new</span>Google Docsへ
-        </button>
-        <button class="btn btn-ghost" onclick="closeModal('agendaModal')">閉じる</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 議事録モーダル ── -->
-  <div class="modal-overlay" id="minutesModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title" id="minutesModalTitle">議事録</div>
-        <button class="modal-close" onclick="closeModal('minutesModal')">✕</button>
-      </div>
-      <div class="modal-meta" id="minutesModalMeta"></div>
-      <div id="minutesModalBody"></div>
-      <div class="action-row" style="margin-top:14px;">
-        <button class="btn btn-amber" onclick="window.print()">
-          <span class="msym" style="font-size:15px;">print</span>印刷
-        </button>
-        <button class="btn btn-blue" id="minutesModalDocsBtn">
-          <span class="msym" style="font-size:15px;">open_in_new</span>Google Docsへ
-        </button>
-        <button class="btn btn-ghost" onclick="closeModal('minutesModal')">閉じる</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Drive検索モーダル ── -->
-  <div class="modal-overlay" id="driveModal">
-    <div class="modal-box" style="max-width: 600px;">
-      <div class="modal-header">
-        <div class="modal-title">☁️ Driveからテキストを抽出</div>
-        <button class="modal-close" onclick="closeModal('driveModal')">✕</button>
-      </div>
-      <div style="margin-bottom:12px;">
-        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">
-          マイドライブ内のGoogle Docsやテキストファイルを検索し、中の文章を「テキストメモ」欄へ自動抽出します。
-        </p>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="driveSearchInput" placeholder="ファイル名で検索... (例: 会議)"
-            onkeydown="if(event.key==='Enter') runDriveSearch()">
-          <button class="btn btn-primary" onclick="runDriveSearch()" style="white-space: nowrap;">検索</button>
-        </div>
-      </div>
-      <div id="driveResultArea"
-        style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-sm); padding:8px; margin-bottom: 14px;">
-        <div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:20px;">キーワードを入力して検索してください</div>
-      </div>
-      <div class="action-row">
-        <button class="btn btn-ghost" onclick="closeModal('driveModal')" style="margin-left:auto;">閉じる</button>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ══ JAVASCRIPT ══ -->
   <script>
-    /* ─── Config & API Client ─── */
     const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
     let GAS_API_URL = localStorage.getItem('COOPS_GAS_API_URL') || DEFAULT_GAS_API_URL;
+    let currentAudio = null;
+    let currentResult = null;
 
     async function callApi(action, payload = {}) {
       if (!GAS_API_URL) {
         openModal('settingsModal');
-        throw new Error('GAS API URLが設定されていません。ヘッダーの「設定」ボタンから設定してください。');
+        throw new Error('GAS API URLが設定されていません。');
       }
-      try {
-        const res = await fetch(GAS_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action, payload })
-        });
-        const data = await res.json();
-        if (data && data.error) throw new Error(data.error);
-        return data;
-      } catch (err) {
-        console.error('API Error:', err);
-        throw err;
-      }
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, payload })
+      });
+      const data = await res.json();
+      if (data && data.error) throw new Error(data.error);
+      return data;
     }
 
     function saveSettings() {
       const url = document.getElementById('gasApiUrlInput').value.trim();
-      if (!url) { showToast('URLを入力してください', 'error'); return; }
+      if (!url) return;
       GAS_API_URL = url;
       localStorage.setItem('COOPS_GAS_API_URL', url);
-      showToast('API設定を保存しました');
+      showToast('設定を保存しました');
       closeModal('settingsModal');
-      initMasterData();
-    }
-
-    /* ─── State ─── */
-    let masterData = { employees: [], meetingTypes: [], departments: [] };
-    let currentStep = 1;
-    let currentAudio = null;
-    let currentMins = null;
-    let currentAgenda = null;
-    let selectedDuration = '';
-    let agendaRecordId = null;
-    let agendaList = [];
-    let historySummaryItems = [];
-
-    /* ─── Init ─── */
-    function formatDateJP(dateStr) {
-      if (!dateStr) return '';
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      const days = ['日', '月', '火', '水', '木', '金', '土'];
-      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('meetingDate').value = today;
-      document.getElementById('agendaDate').value = today;
+      document.getElementById('meetingDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('gasApiUrlInput').value = GAS_API_URL;
-
-      if (GAS_API_URL) {
-        initMasterData();
-      } else {
-        hideLoading();
-        openModal('settingsModal');
-      }
     });
 
-    async function initMasterData() {
-      showLoading('マスタデータを読み込んでいます...');
-      try {
-        masterData = await callApi('getMasterData');
-        populateSelects();
-        populateFilterSelects();
-        loadAgendaList();
-        hideLoading();
-      } catch (err) {
-        hideLoading();
-        showToast('マスタ読み込みエラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── Loading ─── */
     function showLoading(t) {
       const ov = document.getElementById('loadingOverlay');
-      ov.style.display = '';
-      ov.classList.remove('hidden');
+      ov.style.display = ''; ov.classList.remove('hidden');
       document.getElementById('loadingText').textContent = t || '処理中...';
     }
     function hideLoading() {
@@ -1686,8 +426,6 @@
       ov.classList.add('hidden');
       setTimeout(() => ov.style.display = 'none', 350);
     }
-
-    /* ─── Toast ─── */
     function showToast(msg, type) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -1695,9 +433,8 @@
       setTimeout(() => t.className = '', 3500);
     }
 
-    /* ─── Tab ─── */
     function switchTab(name) {
-      ['agenda', 'minutes', 'history'].forEach(n => {
+      ['create', 'history'].forEach(n => {
         document.getElementById('tab-' + n).classList.remove('active');
         document.getElementById('tab-btn-' + n).classList.remove('active');
       });
@@ -1706,597 +443,128 @@
       if (name === 'history') loadHistory();
     }
 
-    /* ─── Populated Selects ─── */
-    function populateSelects() {
-      ['deptSelect', 'agendaDept'].forEach(id => {
-        const el = document.getElementById(id);
-        el.innerHTML = '<option value="">― 選択してください ―</option>';
-        (masterData.departments || []).forEach(d => el.appendChild(new Option(d, d)));
-      });
-      ['meetingTypeSelect', 'agendaType'].forEach(id => {
-        const el = document.getElementById(id);
-        el.innerHTML = '<option value="">― 選択してください ―</option>';
-        (masterData.meetingTypes || []).forEach(t => el.appendChild(new Option(t.name, t.name)));
-      });
-    }
-    function populateFilterSelects() {
-      const fd = document.getElementById('filterDept');
-      fd.innerHTML = '<option value="all">すべての部署</option>';
-      (masterData.departments || []).forEach(d => fd.appendChild(new Option(d, d)));
-      const ft = document.getElementById('filterType');
-      ft.innerHTML = '<option value="all">すべての会議種別</option>';
-      (masterData.meetingTypes || []).forEach(t => ft.appendChild(new Option(t.name, t.name)));
-    }
-
-    /* ─── Participants ─── */
-    function buildParticipantGrid(dept, containerId) {
-      const grid = document.getElementById(containerId);
-      const emps = (masterData.employees || []).filter(e => e.dept === dept);
-      if (!dept || !emps.length) {
-        grid.innerHTML = `<div class="no-participants">${dept ? 'この部署の従業員が登録されていません' : '部署を選択すると参加者が表示されます'}</div>`;
-        return;
-      }
-      grid.innerHTML = emps.map(e => `
-    <label class="participant-check">
-      <input type="checkbox" value="${e.name}" onchange="this.parentElement.classList.toggle('checked', this.checked)">
-      <div class="check-box"></div>
-      <div>
-        <div class="check-name">${e.name}</div>
-        ${e.role ? `<div class="check-role">${e.role}</div>` : ''}
-      </div>
-    </label>`).join('');
-    }
-    function getChecked(containerId) {
-      return [...document.getElementById(containerId).querySelectorAll('input[type=checkbox]:checked')].map(c => c.value);
-    }
-    function setChecked(containerId, names) {
-      document.getElementById(containerId).querySelectorAll('.participant-check').forEach(el => {
-        const name = el.querySelector('input').value;
-        if (names.includes(name)) { el.classList.add('checked'); el.querySelector('input').checked = true; }
-        else { el.classList.remove('checked'); el.querySelector('input').checked = false; }
-      });
-    }
-    function onDeptChange() { buildParticipantGrid(document.getElementById('deptSelect').value, 'participantGrid'); }
-    function onAgendaDeptChange() { buildParticipantGrid(document.getElementById('agendaDept').value, 'agendaParticipantGrid'); }
-
-    /* ─── Duration Chips ─── */
-    function selectChip(el, val) {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedDuration = val;
-    }
-
-    /* ─── Agenda Recall (Minutes Tab) ─── */
-    async function loadAgendaList() {
-      try {
-        agendaList = await callApi('getAgendaList', { dept: 'all', meetingType: 'all' });
-        const sel = document.getElementById('recallSelect');
-        sel.innerHTML = '<option value="">― アジェンダを選択 ―</option>';
-        (agendaList || []).forEach(a => {
-          sel.appendChild(new Option(`${a.meetingDate} | ${a.dept} | ${a.meetingType}`, a.recordId));
-        });
-      } catch(e) {}
-    }
-    function onRecallToggle() {
-      const on = document.getElementById('recallToggle').checked;
-      document.getElementById('recallSelect').classList.toggle('hidden', !on);
-      if (!on) { agendaRecordId = null; resetMinutesForm(); }
-    }
-    function onRecallSelect() {
-      const id = document.getElementById('recallSelect').value;
-      if (!id) { agendaRecordId = null; resetMinutesForm(); return; }
-      const ag = agendaList.find(a => a.recordId === id);
-      if (!ag) return;
-      agendaRecordId = id;
-      document.getElementById('meetingDate').value = ag.meetingDate;
-      const deptSel = document.getElementById('deptSelect');
-      deptSel.value = ag.dept;
-      if (deptSel.value) {
-        buildParticipantGrid(ag.dept, 'participantGrid');
-        const names = ag.participants ? ag.participants.split('、') : [];
-        setChecked('participantGrid', names);
-      }
-      document.getElementById('meetingTypeSelect').value = ag.meetingType;
-      document.getElementById('clientName').value = ag.clientName || '';
-    }
-    function resetMinutesForm() {
-      document.getElementById('recallSelect').value = '';
-      agendaRecordId = null;
-    }
-
-    /* ─── Steps ─── */
-    function goToStep(n) {
-      if (n === 2) {
-        if (!document.getElementById('meetingDate').value) { showToast('会議日を入力してください', 'error'); return; }
-        if (!document.getElementById('deptSelect').value) { showToast('部署を選択してください', 'error'); return; }
-        if (!document.getElementById('meetingTypeSelect').value) { showToast('会議種別を選択してください', 'error'); return; }
-      }
-      currentStep = n;
-      ['step1', 'step2', 'step3'].forEach((id, i) => document.getElementById(id).classList.toggle('hidden', i + 1 !== n));
-      updateStepUI(n);
-    }
-    function updateStepUI(active) {
-      for (let i = 1; i <= 3; i++) {
-        const c = document.getElementById('sc' + i), l = document.getElementById('sl' + i);
-        c.className = 'step-circle' + (i < active ? ' done' : i === active ? ' active' : '');
-        l.className = 'step-label' + (i === active ? ' active' : '');
-        c.textContent = i < active ? '✓' : String(i);
-        if (i < 3) document.getElementById('line' + i).className = 'step-line' + (i < active ? ' done' : '');
-      }
-    }
-
-    /* ─── Handlers ─── */
     function handleUploadFile(e) {
       const file = e.target.files[0]; if (!file) return;
-      const stat = document.getElementById('uploadStatus');
-
-      if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.csv')) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          const txt = ev.target.result;
-          const ta = document.getElementById('inputText');
-          ta.value = ta.value ? ta.value + '\n\n' + txt : txt;
-          stat.classList.remove('hidden');
-          stat.textContent = `✓ テキストを抽出しました (${file.name})`;
-        };
-        reader.readAsText(file);
-      } else {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          currentAudio = { base64: ev.target.result.split(',')[1], mimeType: file.type || 'application/octet-stream' };
-          document.getElementById('uploadCard').classList.add('active-audio');
-          stat.classList.remove('hidden');
-          stat.textContent = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    /* ─── Drive ─── */
-    function openDriveModal() {
-      document.getElementById('driveSearchInput').value = '';
-      document.getElementById('driveResultArea').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:20px;">キーワードを入力して検索してください</div>';
-      openModal('driveModal');
-    }
-    async function runDriveSearch() {
-      const kw = document.getElementById('driveSearchInput').value.trim();
-      if (!kw) return;
-      const area = document.getElementById('driveResultArea');
-      area.innerHTML = '<div style="text-align:center;padding:20px;">検索中...</div>';
-
-      try {
-        const data = await callApi('searchDriveFiles', { keyword: kw });
-        if (!data.length) { area.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:10px;">該当するドキュメントが見つかりませんでした。条件を変えてください。</div>'; return; }
-
-        area.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">' + data.map(f => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--border);border-radius:4px;background:var(--card-sub);">
-        <div style="flex:1;overflow:hidden;margin-right:8px;">
-          <div style="font-size:0.85rem;font-weight:600;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;">${esc(f.name)}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);">${formatDateJP(f.lastUpdated)}</div>
-        </div>
-        <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.7rem;" onclick="runExtractDriveFile('${f.id}','${f.mimeType}')">抽出する</button>
-      </div>
-    `).join('') + '</div>';
-      } catch (err) {
-        area.innerHTML = `<div style="color:var(--danger);font-size:0.8rem;padding:10px;">エラー: ${err.message}</div>`;
-      }
-    }
-    async function runExtractDriveFile(fileId, mimeType) {
-      showLoading('テキストを抽出しています...');
-      try {
-        const data = await callApi('extractDriveText', { fileId, mimeType });
-        hideLoading();
-        const ta = document.getElementById('inputText');
-        ta.value = ta.value ? ta.value + '\n\n' + data.text : data.text;
-        showToast('テキストを抽出しました ✓');
-        closeModal('driveModal');
-      } catch (err) {
-        hideLoading();
-        showToast('抽出エラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── Generate Agenda ─── */
-    async function runGenerateAgenda() {
-      if (!document.getElementById('agendaDept').value) { showToast('部署を選択してください', 'error'); return; }
-      if (!document.getElementById('agendaType').value) { showToast('会議種別を選択してください', 'error'); return; }
-      const params = {
-        meetingDate: document.getElementById('agendaDate').value,
-        dept: document.getElementById('agendaDept').value,
-        meetingType: document.getElementById('agendaType').value,
-        participants: getChecked('agendaParticipantGrid'),
-        clientName: document.getElementById('agendaClientName').value,
-        duration: selectedDuration,
-        topics: document.getElementById('agendaTopics').value
+      const reader = new FileReader();
+      reader.onload = ev => {
+        currentAudio = { base64: ev.target.result.split(',')[1], mimeType: file.type || 'audio/mp3' };
+        document.getElementById('uploadCard').classList.add('active-audio');
+        const stat = document.getElementById('uploadStatus');
+        stat.classList.remove('hidden');
+        stat.textContent = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
       };
-      currentAgenda = params;
-      showLoading('AIがアジェンダを生成しています...');
-      try {
-        const data = await callApi('generateAgenda', params);
-        hideLoading();
-        renderAgendaResult(data);
-      } catch (err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-    function renderAgendaResult(data) {
-      document.getElementById('agOut_purpose').value = data.purpose || '';
-      document.getElementById('agOut_outcome').value = data.outcome || '';
-      document.getElementById('agOut_review').value = data.review || '';
-      document.getElementById('agOut_items').value = data.agenda_items || '';
-      document.getElementById('agOut_closing').value = data.closing || '';
-      if (!data.review) document.getElementById('agOut_reviewBlock').style.display = 'none';
-      else document.getElementById('agOut_reviewBlock').style.display = '';
-
-      document.getElementById('agendaPrintTitle').textContent = data.title || 'アジェンダ';
-      document.getElementById('agendaPrintMeta').textContent =
-        `会議日：${formatDateJP(currentAgenda.meetingDate)}　部署：${currentAgenda.dept}　参加者：${(currentAgenda.participants || []).join('、')}`;
-
-      currentAgenda._fullText = data.full_text || buildAgendaFullText(data);
-      document.getElementById('agendaResult').classList.remove('hidden');
-    }
-    function buildAgendaFullText(d) {
-      return [
-        `【目的】`, d.purpose, '',
-        `【達成したい成果】`, d.outcome, '',
-        d.review ? `【前回の振り返り】\n${d.review}\n` : '',
-        `【各議題】`, d.agenda_items, '',
-        `【クロージング】`, d.closing
-      ].filter(s => s !== null).join('\n');
-    }
-    function resetAgenda() {
-      document.getElementById('agendaResult').classList.add('hidden');
-      currentAgenda = null;
+      reader.readAsDataURL(file);
     }
 
-    /* ─── Save Agenda ─── */
-    async function runSaveAgenda() {
-      const saveData = {
-        meetingDate: currentAgenda.meetingDate,
-        dept: currentAgenda.dept,
-        meetingType: currentAgenda.meetingType || document.getElementById('agendaType').value,
-        participants: currentAgenda.participants,
-        clientName: currentAgenda.clientName,
-        userTopics: document.getElementById('agendaTopics').value,
-        agendaFullText: buildCurrentAgendaFullText()
-      };
-      showLoading('保存中...');
-      try {
-        const r = await callApi('saveAgenda', saveData);
-        hideLoading();
-        if (r.success) {
-          showToast('アジェンダを保存しました ✓');
-          loadAgendaList();
-        } else showToast('保存エラー: ' + r.error, 'error');
-      } catch(err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-    function buildCurrentAgendaFullText() {
-      const p = document.getElementById('agOut_purpose').value;
-      const o = document.getElementById('agOut_outcome').value;
-      const rv = document.getElementById('agOut_review').value;
-      const it = document.getElementById('agOut_items').value;
-      const cl = document.getElementById('agOut_closing').value;
-      return [`【目的】`, p, '', `【達成したい成果】`, o, '', rv ? `【前回の振り返り】\n${rv}\n` : '', `【各議題】`, it, '', `【クロージング】`, cl].filter(s => s !== null).join('\n');
-    }
-    function copyAgendaText() {
-      navigator.clipboard.writeText(buildCurrentAgendaFullText())
-        .then(() => showToast('アジェンダをコピーしました ✓'))
-        .catch(() => showToast('コピーに失敗しました', 'error'));
-    }
-    function printAgenda() { window.print(); }
-
-    /* ─── Generate Minutes ─── */
     async function runGenerateMinutes() {
-      const info = {
-        meetingDate: document.getElementById('meetingDate').value,
-        dept: document.getElementById('deptSelect').value,
-        meetingType: document.getElementById('meetingTypeSelect').value,
-        participants: getChecked('participantGrid'),
-        clientName: document.getElementById('clientName').value,
-        agendaBody: agendaRecordId ? (agendaList.find(a => a.recordId === agendaRecordId) || {}).agendaBody || '' : ''
-      };
-      const inputText = document.getElementById('inputText').value;
-      showLoading('AIが議事録を生成しています...');
-      try {
-        const data = await callApi('generateMinutes', { inputText, audioData: currentAudio, meetingInfo: info });
-        hideLoading();
-        currentMins = { ...data, ...info, inputText, agendaRecordId };
-        goToStep(3);
-        renderMinutes(data, info);
-      } catch (err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── Render Minutes ─── */
-    function renderMinutes(data, info) {
-      document.getElementById('minutesPrintTitle').textContent = `議事録｜${info.meetingDate} ${info.dept}`;
-      document.getElementById('minutesPrintMeta').textContent =
-        `種別：${info.meetingType}　参加者：${(info.participants || []).join('、')}${info.clientName ? '　利用者：' + info.clientName : ''}`;
-
-      document.getElementById('minutesResult').innerHTML = `
-    <div class="result-meta">
-      <span class="meta-pill">📅 ${formatDateJP(info.meetingDate)}</span>
-      <span class="meta-pill">🏢 ${esc(info.dept)}</span>
-      <span class="meta-pill">📋 ${esc(info.meetingType)}</span>
-      <span class="meta-pill">👥 ${esc((info.participants || []).join('、') || '（未選択）')}</span>
-      ${info.clientName ? `<span class="meta-pill">👤 ${esc(info.clientName)}</span>` : ''}
-      ${agendaRecordId ? `<span class="meta-pill" style="color:var(--clover);border-color:var(--clover-mid);">🔗 アジェンダ連携済み</span>` : ''}
-    </div>
-    <div class="summary-card">
-      <div class="summary-label"><span class="msym" style="font-size:13px;">push_pin</span>全体要約</div>
-      <textarea class="editable-result" id="ed_summary" rows="4">${esc(data.summary)}</textarea>
-    </div>
-    ${escard('🔎 議題', 'ed_agenda_items', data.agenda_items, '')}
-    ${escard('💡 主な議論・発言', 'ed_key_discussions', data.key_discussions, 'discussions')}
-    ${escard('✨ 決定事項・アクションプラン', 'ed_action_plans', data.action_plans, 'actions')}
-    ${escard('🍀 組織文化・理念', 'ed_culture_notes', data.culture_notes, 'culture')}
-    ${escard('🎉 次回の検討事項', 'ed_next_agenda', data.next_agenda, 'next')}
-    <div class="section-card feedback">
-      <div class="section-card-header">
-        <div class="section-card-title">🌌 AIより</div>
-      </div>
-      <textarea class="editable-result" id="ed_facilitator_feedback" rows="4">${esc(data.facilitator_feedback)}</textarea>
-    </div>
-    <div class="action-row">
-      <button class="btn btn-primary" onclick="runSaveMinutes()">
-        <span class="msym" style="font-size:15px;">cloud_upload</span>保存する
-      </button>
-      <button class="btn btn-secondary" onclick="copyMinutesText()">
-        <span class="msym" style="font-size:15px;">content_copy</span>コピー
-      </button>
-      <button class="btn btn-amber" onclick="window.print()">
-        <span class="msym" style="font-size:15px;">print</span>印刷
-      </button>
-      <button class="btn btn-blue" id="minutesDocsBtn" onclick="runExportDocs(null)">
-        <span class="msym" style="font-size:15px;">open_in_new</span>Google Docs
-      </button>
-      <button class="btn btn-ghost" onclick="goToStep(1);clearAudio();">
-        <span class="msym" style="font-size:15px;">add</span>新規作成
-      </button>
-    </div>`;
-    }
-    function escard(title, id, val, cls) {
-      return `<div class="section-card ${cls}">
-    <div class="section-card-header">
-      <div class="section-card-title">${title}</div>
-      <button class="copy-btn" onclick="copyText(document.getElementById('${id}').value)">
-        <span class="msym" style="font-size:13px;">content_copy</span>コピー
-      </button>
-    </div>
-    <textarea class="editable-result" id="${id}" rows="4">${esc(val)}</textarea>
-  </div>`;
-    }
-
-    /* ─── Save Minutes ─── */
-    async function runSaveMinutes() {
-      const saveData = {
-        ...currentMins,
-        summary: document.getElementById('ed_summary')?.value || currentMins.summary,
-        agenda_items: document.getElementById('ed_agenda_items')?.value || currentMins.agenda_items,
-        key_discussions: document.getElementById('ed_key_discussions')?.value || currentMins.key_discussions,
-        action_plans: document.getElementById('ed_action_plans')?.value || currentMins.action_plans,
-        culture_notes: document.getElementById('ed_culture_notes')?.value || currentMins.culture_notes,
-        next_agenda: document.getElementById('ed_next_agenda')?.value || currentMins.next_agenda,
-        facilitator_feedback: document.getElementById('ed_facilitator_feedback')?.value || currentMins.facilitator_feedback,
-        agendaRecordId: agendaRecordId
-      };
-      showLoading('保存中...');
-      try {
-        const r = await callApi('saveMinutes', saveData);
-        hideLoading();
-        if (r.success) {
-          showToast(r.message);
-          if (r.recordId) currentMins.recordId = r.recordId;
-          document.getElementById('minutesDocsBtn').onclick = () => runExportDocs(r.recordId || agendaRecordId);
-        } else showToast('保存エラー: ' + r.error, 'error');
-      } catch (err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── Export Google Docs ─── */
-    async function runExportDocs(recordId) {
-      if (!recordId) { showToast('先に「保存する」を押してください', 'error'); return; }
-      showLoading('Google Docsを生成中...');
-      try {
-        const r = await callApi('exportToGoogleDoc', { recordId });
-        hideLoading();
-        if (r.success) {
-          window.open(r.url, '_blank');
-          showToast('Google Docsを開きました ✓');
-        } else showToast('Docs作成エラー: ' + r.error, 'error');
-      } catch (err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── History (高速サマリー一覧 ＆ オンデマンド詳細取得) ─── */
-    async function loadHistory() {
-      const dept = document.getElementById('filterDept').value;
-      const type = document.getElementById('filterType').value;
-      document.getElementById('historyTbody').innerHTML = `<tr><td colspan="8" class="history-empty">読み込み中...</td></tr>`;
-
-      try {
-        historySummaryItems = await callApi('getHistorySummaryList', { dept, meetingType: type });
-        renderHistoryTable(historySummaryItems);
-      } catch (err) {
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-
-    async function runDeleteLog(recordId) {
-      if (!confirm("削除すると戻せません。本当によろしいですか？")) return;
-      showLoading("削除しています...");
-      try {
-        const r = await callApi('deleteLog', { recordId });
-        hideLoading();
-        if (r.success) {
-          showToast("削除が完了しました");
-          loadHistory();
-        } else showToast("エラー: " + r.error, "error");
-      } catch (err) {
-        hideLoading();
-        showToast("通信エラー: " + err.message, "error");
-      }
-    }
-
-    function renderHistoryTable(items) {
-      const tbody = document.getElementById('historyTbody');
-      if (!items || !items.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="history-empty">📭 該当する記録がありません</td></tr>`;
+      const inputText = document.getElementById('inputText').value.trim();
+      if (!inputText && !currentAudio) {
+        showToast('テキストメモか音声ファイルをセットしてください', 'error');
         return;
       }
-      tbody.innerHTML = items.map((item) => {
-        const isDone = item.status === '議事録完了';
-        const badge = isDone
-          ? `<span class="status-badge done">議事録完了</span>`
-          : `<span class="status-badge agenda-only">アジェンダのみ</span>`;
-        const agBtn = item.hasAgenda
-          ? `<button class="tbl-btn agenda" onclick="openAgendaModal('${item.recordId}')">表示</button>`
-          : `<button class="tbl-btn agenda" disabled>―</button>`;
-        const mnBtn = isDone
-          ? `<button class="tbl-btn minutes" onclick="openMinutesModal('${item.recordId}')">表示</button>`
-          : `<button class="tbl-btn minutes" disabled>―</button>`;
-        const delBtn = `<button class="tbl-btn agenda" style="background-color:rgba(239,68,68,0.1);color:var(--danger);border-color:transparent;" onclick="runDeleteLog('${item.recordId}')"><span class="msym" style="font-size:16px;">delete</span></button>`;
-        return `<tr>
-      <td style="white-space:nowrap;">${formatDateJP(item.meetingDate)}</td>
-      <td>${esc(item.dept)}</td>
-      <td style="white-space:nowrap;">${esc(item.meetingType)}</td>
-      <td style="font-size:0.75rem; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(item.participants)}</td>
-      <td>${badge}</td>
-      <td style="text-align:center;">${agBtn}</td>
-      <td style="text-align:center;">${mnBtn}</td>
-      <td style="text-align:center;">${delBtn}</td>
-    </tr>`;
-      }).join('');
+      showLoading('AIが議事録を生成しています...');
+      try {
+        const res = await callApi('generateMinutes', { inputText, audioData: currentAudio });
+        hideLoading();
+        currentResult = res;
+        document.getElementById('res_summary').value = res.summary || '';
+        document.getElementById('res_item1').value = res.item1 || '';
+        document.getElementById('res_item2').value = res.item2 || '';
+        document.getElementById('res_item3').value = res.item3 || '';
+        document.getElementById('res_item4').value = res.item4 || '';
+        document.getElementById('resultArea').classList.remove('hidden');
+        showToast('議事録を生成しました ✓');
+      } catch (err) {
+        hideLoading();
+        showToast('生成エラー: ' + err.message, 'error');
+      }
     }
 
-    /* ─── Modal: Agenda (オンデマンド取得) ─── */
-    async function openAgendaModal(recordId) {
-      showLoading('アジェンダを読み込んでいます...');
+    async function runSaveLog() {
+      if (!currentResult) return;
+      showLoading('データベースに保存しています...');
       try {
-        const item = await callApi('getLogDetail', { recordId });
+        const payload = {
+          meetingDate: document.getElementById('meetingDate').value,
+          clientName: document.getElementById('clientName').value,
+          inputText: document.getElementById('inputText').value,
+          summary: document.getElementById('res_summary').value,
+          item1: document.getElementById('res_item1').value,
+          item2: document.getElementById('res_item2').value,
+          item3: document.getElementById('res_item3').value,
+          item4: document.getElementById('res_item4').value
+        };
+        const res = await callApi('saveLogAndFinish', payload);
         hideLoading();
-        document.getElementById('agendaModalTitle').textContent = `📋 アジェンダ｜${formatDateJP(item.meetingDate)} ${item.dept}`;
-        document.getElementById('agendaModalMeta').innerHTML = makeMeta(item);
-        document.getElementById('agendaModalBody').textContent = item.agendaBody;
-        document.getElementById('agendaModalDocsBtn').onclick = () => runExportDocs(item.recordId);
-        openModal('agendaModal');
+        showToast(res.message || '保存しました ✓');
+      } catch (err) {
+        hideLoading();
+        showToast('保存エラー: ' + err.message, 'error');
+      }
+    }
+
+    function copyFullMinutes() {
+      const txt = [
+        `【サービス担当者会議 議事録】`,
+        `会議日：${document.getElementById('meetingDate').value}`,
+        `利用者名：${document.getElementById('clientName').value || '未記載'}`, '',
+        `■ 1. 全体要約\n${document.getElementById('res_summary').value}`, '',
+        `■ 2. 開催目的・検討議題\n${document.getElementById('res_item1').value}`, '',
+        `■ 3. 発言内容・主な議論\n${document.getElementById('res_item2').value}`, '',
+        `■ 4. 合意・決定事項\n${document.getElementById('res_item3').value}`, '',
+        `■ 5. 今後の課題・次回予定\n${document.getElementById('res_item4').value}`
+      ].join('\n');
+      navigator.clipboard.writeText(txt).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', 'error'));
+    }
+
+    async function loadHistory() {
+      const tbody = document.getElementById('historyTbody');
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">読み込み中...</td></tr>`;
+      try {
+        const items = await callApi('getHistorySummaryList');
+        if (!items || !items.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">📭 履歴がありません</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = items.map(item => `
+          <tr>
+            <td>${esc(item.timestamp)}</td>
+            <td>${esc(item.meetingDate)}</td>
+            <td>${esc(item.clientName)}</td>
+            <td style="text-align:center;">
+              <button class="tbl-btn" onclick="openDetailModal(${item.id})">詳細</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">エラー: ${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    async function openDetailModal(id) {
+      showLoading('詳細を読み込んでいます...');
+      try {
+        const detail = await callApi('getLogDetail', { id });
+        hideLoading();
+        document.getElementById('detailModalTitle').textContent = `議事録詳細｜${esc(detail.clientName)}`;
+        document.getElementById('detailModalSub').textContent = `登録日時：${detail.timestamp} / 会議日：${detail.meetingDate}`;
+        document.getElementById('detailModalBody').innerHTML = `
+          <div class="section-card"><div class="section-title">📌 1. 会議要約</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.summary)}</div></div>
+          <div class="section-card"><div class="section-title">🎯 2. 開催目的・検討議題</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item1)}</div></div>
+          <div class="section-card"><div class="section-title">💡 3. 発言内容・主な議論</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item2)}</div></div>
+          <div class="section-card"><div class="section-title">✨ 4. 合意・決定事項・理由</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item3)}</div></div>
+          <div class="section-card"><div class="section-title">🎉 5. 今後の課題・次回予定</div><div style="white-space:pre-wrap; line-height:1.7;">${esc(detail.item4)}</div></div>
+        `;
+        openModal('detailModal');
       } catch (err) {
         hideLoading();
         showToast('読み込みエラー: ' + err.message, 'error');
       }
     }
 
-    /* ─── Modal: Minutes (オンデマンド取得) ─── */
-    async function openMinutesModal(recordId) {
-      showLoading('議事録を読み込んでいます...');
-      try {
-        const item = await callApi('getLogDetail', { recordId });
-        hideLoading();
-        document.getElementById('minutesModalTitle').textContent = `📝 議事録｜${formatDateJP(item.meetingDate)} ${item.dept}`;
-        document.getElementById('minutesModalMeta').innerHTML = makeMeta(item);
-        const sections = [
-          { title: '📌 全体要約', body: item.summary },
-          { title: '🔎 議題', body: item.agenda_items },
-          { title: '💡 主な議論・発言', body: item.key_discussions },
-          { title: '✨ 決定事項・アクション', body: item.action_plans },
-          { title: '🍀 組織文化・理念', body: item.culture_notes },
-          { title: '🎉 次回の検討事項', body: item.next_agenda },
-          { title: '🌌 AIファシリテーター評価', body: item.facilitator_feedback }
-        ].filter(s => s.body);
-        document.getElementById('minutesModalBody').innerHTML = sections.map(s => `
-      <div style="margin-bottom:12px;">
-        <div style="font-size:0.9rem;font-weight:700;color:var(--text-muted);margin-bottom:5px;">${s.title}</div>
-        <div style="font-size:0.95rem;line-height:1.8;white-space:pre-wrap;color:var(--text);">${esc(s.body)}</div>
-      </div>
-      <div class="divider"></div>`).join('');
-        document.getElementById('minutesModalDocsBtn').onclick = () => runExportDocs(item.recordId);
-        openModal('minutesModal');
-      } catch (err) {
-        hideLoading();
-        showToast('読み込みエラー: ' + err.message, 'error');
-      }
-    }
-
-    function makeMeta(item) {
-      return [
-        item.meetingDate && `<span class="meta-pill">📅 ${formatDateJP(item.meetingDate)}</span>`,
-        item.dept && `<span class="meta-pill">🏢 ${esc(item.dept)}</span>`,
-        item.meetingType && `<span class="meta-pill">📋 ${esc(item.meetingType)}</span>`,
-        item.participants && `<span class="meta-pill">👥 ${esc(item.participants)}</span>`,
-        item.clientName && `<span class="meta-pill">👤 ${esc(item.clientName)}</span>`
-      ].filter(Boolean).join('');
-    }
     function openModal(id) { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-    ['agendaModal', 'minutesModal', 'driveModal', 'settingsModal'].forEach(id => {
-      document.getElementById(id).addEventListener('click', function (e) { if (e.target === this) closeModal(id); });
-    });
-
-    /* ─── Employee Panel ─── */
-    function toggleEmpPanel() {
-      document.getElementById('empBody').classList.toggle('open');
-      document.getElementById('empArrow').classList.toggle('open');
-    }
-    async function submitAddEmployee() {
-      const dept = document.getElementById('newEmpDept').value.trim();
-      const name = document.getElementById('newEmpName').value.trim();
-      const role = document.getElementById('newEmpRole').value.trim();
-      if (!dept || !name) { showToast('部署名と氏名は必須です', 'error'); return; }
-      showLoading('追加中...');
-      try {
-        const r = await callApi('addEmployee', { dept, name, role });
-        hideLoading();
-        if (r.success) {
-          showToast(`${name}さんをマスタに追加しました`);
-          ['newEmpDept', 'newEmpName', 'newEmpRole'].forEach(id => document.getElementById(id).value = '');
-          masterData = await callApi('getMasterData');
-          populateSelects();
-          populateFilterSelects();
-        } else showToast('エラー: ' + r.error, 'error');
-      } catch (err) {
-        hideLoading();
-        showToast('エラー: ' + err.message, 'error');
-      }
-    }
-
-    /* ─── Utilities ─── */
-    function esc(str) {
-      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-    function copyText(text) {
-      navigator.clipboard.writeText(text).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', 'error'));
-    }
-    function copyMinutesText() {
-      const m = currentMins || {};
-      const t = [
-        `【会議日】${m.meetingDate}  【部署】${m.dept}  【会議種別】${m.meetingType}`,
-        `【参加者】${(m.participants || []).join('、')}`, '',
-        '📌 全体要約', document.getElementById('ed_summary')?.value || m.summary, '',
-        '🔎 議題', document.getElementById('ed_agenda_items')?.value || m.agenda_items, '',
-        '💡 主な議論・発言', document.getElementById('ed_key_discussions')?.value || m.key_discussions, '',
-        '✨ 決定事項', document.getElementById('ed_action_plans')?.value || m.action_plans, '',
-        '🍀 組織文化・理念', document.getElementById('ed_culture_notes')?.value || m.culture_notes, '',
-        '🎉 次回の検討事項', document.getElementById('ed_next_agenda')?.value || m.next_agenda, '',
-        '🌌 AI評価', document.getElementById('ed_facilitator_feedback')?.value || m.facilitator_feedback
-      ].join('\n');
-      copyText(t);
-    }
-    function clearAudio() {
-      currentAudio = null;
-      document.getElementById('uploadCard').classList.remove('active-audio');
-      document.getElementById('uploadStatus').classList.add('hidden');
-      document.getElementById('inputText').value = '';
-    }
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   </script>
 </body>
 
