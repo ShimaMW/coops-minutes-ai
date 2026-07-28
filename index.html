@@ -40,6 +40,11 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .animate-popup { animation: popupIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes pulseRed {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .rec-active { animation: pulseRed 1.2s infinite; }
     </style>
 </head>
 <body class="bg-careBg h-[100dvh] overflow-hidden flex flex-col">
@@ -121,24 +126,48 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2">🎤 音声データの追加</label>
-                    
-                    <div class="bg-carePrimaryLight/60 p-3 rounded-lg border border-carePrimary/20 mb-3 text-center">
-                        <p class="text-[11px] text-carePrimaryDark leading-relaxed">
-                            ※ボイスメモ等で録音した音声ファイルを選択してください。
-                        </p>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">🎤 音声データの追加方法</label>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- 方法1: 画面で直接録音 -->
+                        <div id="micCard" class="bg-white border-2 border-slate-200 hover:border-carePrimary/50 rounded-xl p-3.5 text-center flex flex-col items-center justify-between transition-all">
+                            <div class="flex items-center gap-1.5 text-slate-700 font-bold text-xs mb-2">
+                                <span class="material-symbols-outlined text-rose-500">mic</span>
+                                この画面でマイク録音
+                            </div>
+                            
+                            <button id="recBtn" onclick="toggleRecording()" class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-rose-200">
+                                <span class="material-symbols-outlined text-base" id="recIcon">fiber_manual_record</span>
+                                <span id="recBtnText">録音を開始する</span>
+                            </button>
+
+                            <div id="recTimer" class="text-[11px] font-mono font-bold text-rose-600 mt-2 hidden flex items-center gap-1">
+                                <span class="inline-block w-2 h-2 rounded-full bg-rose-600 rec-active"></span>
+                                録音中: <span id="timerCount">00:00</span>
+                            </div>
+                        </div>
+
+                        <!-- 方法2: ファイルを選択 -->
+                        <div class="bg-white border-2 border-slate-200 hover:border-carePrimary/50 rounded-xl p-3.5 text-center flex flex-col items-center justify-between transition-all">
+                            <div class="flex items-center gap-1.5 text-slate-700 font-bold text-xs mb-2">
+                                <span class="material-symbols-outlined text-carePrimary">folder_open</span>
+                                録音ファイルを準備
+                            </div>
+
+                            <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav" class="hidden" onchange="handleFileSelect(this)">
+                            <label for="audioFile" class="w-full py-2.5 px-3 bg-slate-50 hover:bg-carePrimaryLight/50 text-slate-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-slate-200 cursor-pointer">
+                                <span class="material-symbols-outlined text-base text-carePrimary">upload_file</span>
+                                ファイルを選択
+                            </label>
+                            <div class="text-[10px] text-slate-400 mt-2">.mp3, .m4a, .wav等</div>
+                        </div>
                     </div>
 
-                    <div class="flex flex-col gap-3">
-                        <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav" class="hidden" onchange="handleFileSelect(this)">
-                        <label for="audioFile" class="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-dashed border-slate-300 text-slate-700 py-3.5 px-4 rounded-xl font-bold shadow-sm cursor-pointer hover:border-carePrimary hover:bg-carePrimaryLight/30 active:scale-[0.99] transition-all text-sm">
-                            <span class="material-symbols-outlined text-xl text-carePrimary">upload_file</span>
-                            録音ファイルを選択する
-                        </label>
-                    </div>
-
-                    <div id="fileNameDisplay" class="mt-2 text-xs font-bold text-slate-600 hidden text-center bg-slate-50 border border-slate-200 p-2 rounded-lg">
-                        選択中: <span id="fileNameSpan" class="text-carePrimary break-all"></span>
+                    <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-slate-600 hidden text-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex items-center justify-between">
+                        <span class="truncate">✓ セット済み: <span id="fileNameSpan" class="text-carePrimary font-bold"></span></span>
+                        <button onclick="clearAudioFile()" class="text-slate-400 hover:text-rose-500 p-1" title="削除">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
                     </div>
                 </div>
 
@@ -269,6 +298,13 @@
         let selectedAudioFile = null;
         let saveAutoCloseTimer = null;
 
+        // 🎙️ マイク直接録音関連のステート
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let timerInterval = null;
+        let recSeconds = 0;
+
         async function callApi(action, payload = {}) {
             if (!GAS_API_URL) {
                 openSettingsModal();
@@ -329,12 +365,94 @@
             if (saveAutoCloseTimer) clearTimeout(saveAutoCloseTimer);
         }
 
+        /* 🎙️ 直接マイク録音機能 */
+        async function toggleRecording() {
+            const btn = document.getElementById('recBtn');
+            const icon = document.getElementById('recIcon');
+            const btnText = document.getElementById('recBtnText');
+            const timerEl = document.getElementById('recTimer');
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        const reader = new FileReader();
+                        reader.onload = ev => {
+                            const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            selectedAudioFile = {
+                                name: `直接録音データ_${nowStr}.mp3`,
+                                type: 'audio/mp3',
+                                base64: ev.target.result.split(',')[1]
+                            };
+                            document.getElementById('fileNameDisplay').classList.remove('hidden');
+                            document.getElementById('fileNameSpan').textContent = selectedAudioFile.name;
+                        };
+                        reader.readAsDataURL(audioBlob);
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+
+                    // UIの更新
+                    btn.className = "w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition shadow";
+                    icon.textContent = "stop";
+                    btnText.textContent = "録音を停止する";
+                    timerEl.classList.remove('hidden');
+
+                    recSeconds = 0;
+                    updateTimerDisplay();
+                    timerInterval = setInterval(() => {
+                        recSeconds++;
+                        updateTimerDisplay();
+                    }, 1000);
+
+                } catch (err) {
+                    alert("マイクの使用が許可されなかったか、アクセスできませんでした: " + err.message);
+                }
+            } else {
+                // 停止処理
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                }
+                isRecording = false;
+                clearInterval(timerInterval);
+
+                // UIの復元
+                btn.className = "w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-rose-200";
+                icon.textContent = "fiber_manual_record";
+                btnText.textContent = "録音を開始する";
+                timerEl.classList.add('hidden');
+            }
+        }
+
+        function updateTimerDisplay() {
+            const mins = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+            const secs = String(recSeconds % 60).padStart(2, '0');
+            document.getElementById('timerCount').textContent = `${mins}:${secs}`;
+        }
+
         function handleFileSelect(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
-                selectedAudioFile = inputElement.files[0];
+                const file = inputElement.files[0];
+                selectedAudioFile = file; // fileオブジェクト
                 document.getElementById('fileNameDisplay').classList.remove('hidden');
-                document.getElementById('fileNameSpan').textContent = selectedAudioFile.name;
+                document.getElementById('fileNameSpan').textContent = file.name;
             }
+        }
+
+        function clearAudioFile() {
+            selectedAudioFile = null;
+            document.getElementById('audioFile').value = '';
+            document.getElementById('fileNameDisplay').classList.add('hidden');
         }
 
         function toggleSidebar() {
@@ -403,20 +521,29 @@
             try {
                 let audioData = null;
                 if (selectedAudioFile) {
-                    if (selectedAudioFile.size > 40 * 1024 * 1024) {
-                        alert("音声ファイルのサイズが40MBを超えています。");
-                        resetUI();
-                        return;
-                    }
-                    audioData = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = e => resolve({
+                    if (selectedAudioFile.base64) {
+                        // マイクで直接録音した場合（すでにbase64化済み）
+                        audioData = {
                             mimeType: selectedAudioFile.type || 'audio/mp3',
-                            base64: e.target.result.split(',')[1]
+                            base64: selectedAudioFile.base64
+                        };
+                    } else if (selectedAudioFile instanceof File) {
+                        // ファイル選択ダイアログからアップロードした場合
+                        if (selectedAudioFile.size > 40 * 1024 * 1024) {
+                            alert("音声ファイルのサイズが40MBを超えています。");
+                            resetUI();
+                            return;
+                        }
+                        audioData = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve({
+                                mimeType: selectedAudioFile.type || 'audio/mp3',
+                                base64: e.target.result.split(',')[1]
+                            });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(selectedAudioFile);
                         });
-                        reader.onerror = reject;
-                        reader.readAsDataURL(selectedAudioFile);
-                    });
+                    }
                 }
 
                 const result = await callApi('generateMinutes', { inputText, audioData });
@@ -465,7 +592,6 @@
                 saveBtn.innerHTML = origHtml;
                 saveBtn.disabled = false;
                 
-                // 画面中央に美しく保存完了モーダルを表示！
                 showSaveSuccessModal('データベースに保存完了しました！', res.message || '保存されました。左上のメニューからいつでも呼び出せます。');
                 loadHistory(); 
             } catch(err) {
@@ -535,8 +661,7 @@
             document.getElementById('inputText').value = '';
             document.getElementById('audioFile').value = '';
             
-            selectedAudioFile = null;
-            document.getElementById('fileNameDisplay').classList.add('hidden');
+            clearAudioFile();
             
             document.getElementById('outSummary').value = '';
             document.getElementById('outItem1').value = '';
