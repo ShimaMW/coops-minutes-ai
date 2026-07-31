@@ -61,7 +61,6 @@
                 <span class="text-xs md:text-sm font-bold text-slate-500 border-l border-slate-300 pl-2.5 ml-1">担当者会議AI議事録</span>
             </div>
         </div>
-
         <div></div>
     </header>
 
@@ -105,61 +104,79 @@
         <main class="w-full md:flex-1 md:overflow-y-auto bg-careCard rounded-xl shadow-sm flex flex-col shrink-0 border border-careBorder">
             <div class="p-4 md:p-6 space-y-5 pb-8">
                 
-                <header class="flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <span class="material-symbols-outlined text-carePrimary text-2xl">edit_square</span>
-                    <h2 class="text-base md:text-lg font-bold text-slate-800">新規作成</h2>
+                <header class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-carePrimary text-2xl">edit_square</span>
+                        <h2 class="text-base md:text-lg font-bold text-slate-800">新規作成</h2>
+                    </div>
+                    <div id="restoreNotice" class="hidden text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-bold flex items-center gap-1 border border-emerald-200">
+                        <span class="material-symbols-outlined text-sm">inventory_2</span>前回の未作成データを復元しました
+                    </div>
                 </header>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">📅 会議実施日</label>
-                        <input type="date" id="meetingDate" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
+                        <input type="date" id="meetingDate" onchange="autoSaveDraft()" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">👤 利用者氏名</label>
-                        <input type="text" id="clientName" placeholder="例: 鈴木 太郎 様" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
+                        <input type="text" id="clientName" oninput="autoSaveDraft()" placeholder="例: 鈴木 太郎 様" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-carePrimary outline-none bg-slate-50">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2">🎤 音声データの追加方法</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 flex items-center justify-between">
+                        <span>🎤 音声データの追加</span>
+                        <span class="text-[11px] font-bold text-careGreen bg-carePrimaryLight/60 px-2 py-0.5 rounded">ボイスメモ添付を推奨</span>
+                    </label>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- 方法1: 画面で直接録音 (carecoreトンマナ統一) -->
-                        <div id="micCard" class="bg-white border-2 border-slate-200 hover:border-carePrimary/50 rounded-xl p-3.5 text-center flex flex-col items-center justify-between transition-all">
-                            <div class="flex items-center gap-1.5 text-slate-700 font-bold text-xs mb-2">
-                                <span class="material-symbols-outlined text-amber-700">mic</span>
-                                この画面でマイク録音
-                            </div>
-                            
-                            <button id="recBtn" onclick="toggleRecording()" class="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-amber-200">
-                                <span class="material-symbols-outlined text-base" id="recIcon">fiber_manual_record</span>
-                                <span id="recBtnText">録音を開始する</span>
-                            </button>
-
-                            <div id="recTimer" class="text-[11px] font-mono font-bold text-amber-800 mt-2 hidden flex items-center gap-1">
-                                <span class="inline-block w-2 h-2 rounded-full bg-amber-600 rec-active"></span>
-                                録音中: <span id="timerCount">00:00</span>
-                            </div>
+                    <!-- 推奨：ボイスメモファイル添付（メイン配置） -->
+                    <div class="bg-white border-2 border-carePrimary/40 hover:border-carePrimary rounded-xl p-4 text-center transition-all shadow-sm">
+                        <div class="flex items-center justify-center gap-1.5 text-carePrimary font-bold text-xs mb-1.5">
+                            <span class="material-symbols-outlined text-lg">mic</span>
+                            スマホのボイスメモ等で録音したファイルを添付（推奨）
                         </div>
+                        <p class="text-[11px] text-slate-500 mb-3">
+                            ※iPhoneの「ボイスメモ」やAndroidの「録音アプリ」で録音したファイルをここで選択してください。持ち帰り時もデータが消えません。
+                        </p>
 
-                        <!-- 方法2: ファイルを選択 -->
-                        <div class="bg-white border-2 border-slate-200 hover:border-carePrimary/50 rounded-xl p-3.5 text-center flex flex-col items-center justify-between transition-all">
-                            <div class="flex items-center gap-1.5 text-slate-700 font-bold text-xs mb-2">
-                                <span class="material-symbols-outlined text-carePrimary">folder_open</span>
-                                録音ファイルを準備
-                            </div>
-
-                            <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav" class="hidden" onchange="handleFileSelect(this)">
-                            <label for="audioFile" class="w-full py-2.5 px-3 bg-slate-50 hover:bg-carePrimaryLight/50 text-slate-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-slate-200 cursor-pointer">
-                                <span class="material-symbols-outlined text-base text-carePrimary">upload_file</span>
-                                ファイルを選択
-                            </label>
-                            <div class="text-[10px] text-slate-400 mt-2">.mp3, .m4a, .wav等</div>
-                        </div>
+                        <input type="file" id="audioFile" accept="audio/*, .m4a, .mp3, .wav, .aac, .flac" class="hidden" onchange="handleFileSelect(this)">
+                        <label for="audioFile" class="w-full py-3 px-4 bg-carePrimary hover:bg-carePrimaryDark text-white rounded-xl font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow">
+                            <span class="material-symbols-outlined text-lg">upload_file</span>
+                            録音ファイルを選択する (.m4a, .mp3等)
+                        </label>
                     </div>
 
-                    <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-slate-600 hidden text-center bg-carePrimaryLight/40 border border-carePrimary/20 p-2.5 rounded-lg flex items-center justify-between">
+                    <!-- 補助：ブラウザ直接録音（アコーディオン/注意書き付き） -->
+                    <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <details class="group">
+                            <summary class="text-xs font-bold text-slate-600 cursor-pointer flex items-center justify-between list-none">
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm text-slate-400">sensors</span>
+                                    この画面で直接マイク録音する場合（短時間・即時作成用）
+                                </span>
+                                <span class="material-symbols-outlined text-sm transition-transform group-open:rotate-180">expand_more</span>
+                            </summary>
+                            <div class="mt-3 pt-2 border-t border-slate-200 text-center">
+                                <p class="text-[10px] text-amber-800 bg-amber-50 p-2 rounded mb-2 border border-amber-200 text-left leading-relaxed">
+                                    ⚠️ 画面が暗くなったりブラウザを閉じると録音が停止します。長時間の会議や持ち帰って作成する場合は、ボイスメモアプリでの録音を推奨します。
+                                </p>
+                                
+                                <button id="recBtn" onclick="toggleRecording()" class="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-amber-200">
+                                    <span class="material-symbols-outlined text-base" id="recIcon">fiber_manual_record</span>
+                                    <span id="recBtnText">直接録音を開始する</span>
+                                </button>
+
+                                <div id="recTimer" class="text-[11px] font-mono font-bold text-amber-800 mt-2 hidden flex items-center justify-center gap-1">
+                                    <span class="inline-block w-2 h-2 rounded-full bg-amber-600 rec-active"></span>
+                                    録音中: <span id="timerCount">00:00</span>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-slate-600 hidden text-center bg-carePrimaryLight/50 border border-carePrimary/30 p-2.5 rounded-lg flex items-center justify-between shadow-sm">
                         <span class="truncate">✓ セット済み: <span id="fileNameSpan" class="text-carePrimary font-bold"></span></span>
                         <button onclick="clearAudioFile()" class="text-slate-400 hover:text-rose-600 p-1" title="削除">
                             <span class="material-symbols-outlined text-base">close</span>
@@ -169,7 +186,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">📝 補足メモ・キーワード</label>
-                    <textarea id="inputText" class="w-full h-24 p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-carePrimary resize-none shadow-inner" placeholder="（※音声があれば空欄でOK！会議で特に強調したいポイントがあれば記入してください）"></textarea>
+                    <textarea id="inputText" oninput="autoSaveDraft()" class="w-full h-24 p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-carePrimary resize-none shadow-inner" placeholder="（※音声があれば空欄でOK！会議で特に強調したいポイントがあれば記入してください）"></textarea>
                 </div>
 
                 <div class="pt-2">
@@ -275,8 +292,6 @@
         </div>
     </div>
 
-
-
     <script>
         const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFBqBdzxxj_Yb6pblY_aS8UQspLdb59pCnrDS0XZy7G_MX3foCp8M7CWzPBzob_rPa/exec';
         let GAS_API_URL = localStorage.getItem('COOPS_GAS_API_URL') || DEFAULT_GAS_API_URL;
@@ -291,7 +306,6 @@
 
         async function callApi(action, payload = {}) {
             if (!GAS_API_URL) {
-                openSettingsModal();
                 throw new Error('GAS API URLが設定されていません。');
             }
             try {
@@ -320,8 +334,9 @@
         function initApp() {
             const dateEl = document.getElementById('meetingDate');
             if (dateEl && !dateEl.value) dateEl.valueAsDate = new Date();
-            const inputUrlEl = document.getElementById('gasApiUrlInput');
-            if (inputUrlEl) inputUrlEl.value = GAS_API_URL;
+            
+            // ⚡ 持ち帰り保護：一時保存ドラフトがあれば自動復元
+            restoreDraft();
             loadHistory();
         }
 
@@ -332,15 +347,29 @@
         }
         window.onload = initApp;
 
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-        function saveSettings() {
-            const url = document.getElementById('gasApiUrlInput').value.trim();
-            if(!url) return;
-            GAS_API_URL = url;
-            localStorage.setItem('COOPS_GAS_API_URL', url);
-            closeSettingsModal();
-            loadHistory();
+        /* 💾 持ち帰り時のデータ保持（自動ドラフト保存） */
+        function autoSaveDraft() {
+            const draft = {
+                meetingDate: document.getElementById('meetingDate').value,
+                clientName: document.getElementById('clientName').value,
+                inputText: document.getElementById('inputText').value
+            };
+            localStorage.setItem('CARECORE_DRAFT', JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            try {
+                const draftStr = localStorage.getItem('CARECORE_DRAFT');
+                if (draftStr) {
+                    const draft = JSON.parse(draftStr);
+                    if (draft.meetingDate) document.getElementById('meetingDate').value = draft.meetingDate;
+                    if (draft.clientName) document.getElementById('clientName').value = draft.clientName;
+                    if (draft.inputText) document.getElementById('inputText').value = draft.inputText;
+                    if (draft.clientName || draft.inputText) {
+                        document.getElementById('restoreNotice').classList.remove('hidden');
+                    }
+                }
+            } catch(e){}
         }
 
         function showSaveSuccessModal(title, msg) {
@@ -358,7 +387,7 @@
             if (saveAutoCloseTimer) clearTimeout(saveAutoCloseTimer);
         }
 
-        /* 🎙️ 直接マイク録音機能 (carecoreトンマナ統一) */
+        /* 🎙️ 直接マイク録音機能 */
         async function toggleRecording() {
             const btn = document.getElementById('recBtn');
             const icon = document.getElementById('recIcon');
@@ -419,7 +448,7 @@
 
                 btn.className = "w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition border border-amber-200";
                 icon.textContent = "fiber_manual_record";
-                btnText.textContent = "録音を開始する";
+                btnText.textContent = "直接録音を開始する";
                 timerEl.classList.add('hidden');
             }
         }
@@ -433,9 +462,13 @@
         function handleFileSelect(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const file = inputElement.files[0];
+                if (file.size > 35 * 1024 * 1024) {
+                    alert("⚠️ ファイルサイズが35MBを超えています。Google Apps Scriptの通信上限を超える可能性があるため、ボイスメモの録音時間を30分程度に分割してアップロードしてください。");
+                }
                 selectedAudioFile = file;
                 document.getElementById('fileNameDisplay').classList.remove('hidden');
                 document.getElementById('fileNameSpan').textContent = file.name;
+                autoSaveDraft();
             }
         }
 
@@ -452,7 +485,6 @@
                 sidebar.classList.remove('sidebar-closed');
                 sidebar.classList.add('sidebar-open');
                 overlay.classList.remove('hidden');
-                // ⚡ サイドバーを開いた瞬間に自動で最新ログを取得・表示！
                 loadHistory();
             } else {
                 sidebar.classList.remove('sidebar-open');
@@ -468,7 +500,7 @@
             items.forEach(function(item) {
                 const text = item.innerText.toLowerCase();
                 if (text.includes(query)) {
-                    item.style.display = 'block';
+                    item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
                 }
@@ -519,15 +551,13 @@
                             base64: selectedAudioFile.base64
                         };
                     } else if (selectedAudioFile instanceof File) {
-                        if (selectedAudioFile.size > 40 * 1024 * 1024) {
-                            alert("音声ファイルのサイズが40MBを超えています。");
-                            resetUI();
-                            return;
+                        if (selectedAudioFile.size > 38 * 1024 * 1024) {
+                            alert("音声ファイルのサイズが大きすぎるためエラーになる可能性があります。ファイルを分割するかボイスメモの品質を標準に変更してください。");
                         }
                         audioData = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             reader.onload = e => resolve({
-                                mimeType: selectedAudioFile.type || 'audio/mp3',
+                                mimeType: selectedAudioFile.type || 'audio/m4a',
                                 base64: e.target.result.split(',')[1]
                             });
                             reader.onerror = reject;
@@ -582,6 +612,10 @@
                 saveBtn.innerHTML = origHtml;
                 saveBtn.disabled = false;
                 
+                // 保存成功したらドラフトを消去
+                localStorage.removeItem('CARECORE_DRAFT');
+                document.getElementById('restoreNotice').classList.add('hidden');
+
                 showSaveSuccessModal('データベースに保存完了しました！', res.message || '保存されました。左上のメニューからいつでも呼び出せます。');
                 loadHistory(); 
             } catch(err) {
@@ -594,7 +628,6 @@
         async function loadHistory() {
             const listDiv = document.getElementById('historyList');
             
-            // ⚡ ① ブラウザキャッシュ（保存済みデータ）があれば 0.01秒で即時表示（待ち時間ゼロ！）
             const cachedDataStr = localStorage.getItem('CARECORE_HISTORY_CACHE');
             if (cachedDataStr) {
                 try {
@@ -607,7 +640,6 @@
                 listDiv.innerHTML = '<div class="text-center text-slate-400 text-xs mt-5">読み込み中...</div>';
             }
             
-            // ⚡ ② 裏側で最新データを非同期取得してそっと更新＆キャッシュ保存
             try {
                 const historyArr = await callApi('getHistorySummaryList');
                 if (!historyArr || historyArr.length === 0) {
@@ -616,7 +648,6 @@
                     return;
                 }
                 
-                // 最新データを保存＆レンダリング
                 localStorage.setItem('CARECORE_HISTORY_CACHE', JSON.stringify(historyArr));
                 renderHistoryItems(historyArr);
             } catch (err) {
@@ -656,7 +687,7 @@
         }
 
         async function confirmDeleteHistory(event, rowId, clientName, meetingDate) {
-            event.stopPropagation(); // 復元イベントの発生を防止
+            event.stopPropagation();
             if (!confirm(`「${clientName} 様 (${meetingDate})」の過去ログを削除してもよろしいですか？`)) {
                 return;
             }
@@ -700,6 +731,8 @@
             document.getElementById('audioFile').value = '';
             
             clearAudioFile();
+            localStorage.removeItem('CARECORE_DRAFT');
+            document.getElementById('restoreNotice').classList.add('hidden');
             
             document.getElementById('outSummary').value = '';
             document.getElementById('outItem1').value = '';
