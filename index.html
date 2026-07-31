@@ -462,9 +462,6 @@
         function handleFileSelect(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const file = inputElement.files[0];
-                if (file.size > 35 * 1024 * 1024) {
-                    alert("⚠️ ファイルサイズが35MBを超えています。Google Apps Scriptの通信上限を超える可能性があるため、ボイスメモの録音時間を30分程度に分割してアップロードしてください。");
-                }
                 selectedAudioFile = file;
                 document.getElementById('fileNameDisplay').classList.remove('hidden');
                 document.getElementById('fileNameSpan').textContent = file.name;
@@ -551,9 +548,6 @@
                             base64: selectedAudioFile.base64
                         };
                     } else if (selectedAudioFile instanceof File) {
-                        if (selectedAudioFile.size > 38 * 1024 * 1024) {
-                            alert("音声ファイルのサイズが大きすぎるためエラーになる可能性があります。ファイルを分割するかボイスメモの品質を標準に変更してください。");
-                        }
                         audioData = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             reader.onload = e => resolve({
