@@ -21,13 +21,6 @@ export default async function handler(req, res) {
 
   const apiKey = (process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '').replace(/[\s\r\n]+/g, '').trim();
 
-  if (req.method === 'GET') {
-    if (!apiKey) {
-      return res.status(404).json({ error: 'GEMINI_API_KEY 未設定', code: 'NO_ENV_KEY' });
-    }
-    return res.status(200).json({ apiKey });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -42,12 +35,11 @@ export default async function handler(req, res) {
   try {
     const { action, payload = {} } = req.body || {};
 
-    // 1. 接続確認 / APIキー取得
-    if (action === 'ping' || action === 'getApiKey') {
+    // 1. 接続確認（生のAPIキーは返却しない）
+    if (action === 'ping') {
       return res.status(200).json({
         success: true,
         hasKey: true,
-        apiKey,
         message: 'Vercel Gemini API エンドポイントが有効です'
       });
     }

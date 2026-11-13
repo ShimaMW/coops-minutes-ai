@@ -1314,25 +1314,17 @@
                 return null;
             }
             try {
-                const res = await fetch('/api/auth/gemini-key');
+                const res = await fetch('/api/auth/gemini-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Carecore-Client': '1'
+                    }
+                });
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.apiKey) {
                         cachedServerGeminiKey = data.apiKey.replace(/[\s\r\n]+/g, '').trim();
-                        return cachedServerGeminiKey;
-                    }
-                }
-            } catch (e) {}
-            try {
-                const res2 = await fetch('/api/gemini', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getApiKey' })
-                });
-                if (res2.ok) {
-                    const data2 = await res2.json();
-                    if (data2 && data2.apiKey) {
-                        cachedServerGeminiKey = data2.apiKey.replace(/[\s\r\n]+/g, '').trim();
                         return cachedServerGeminiKey;
                     }
                 }
