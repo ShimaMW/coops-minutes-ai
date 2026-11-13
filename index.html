@@ -1211,6 +1211,63 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 120000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } catch (err) {
+                if (err && err.name === 'AbortError') {
+                    throw new Error('通信がタイムアウトしました（timeout）');
+                }
+                throw err;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        function resolveAudioMimeType(fileObj) {
+            let raw = (fileObj && fileObj.type) ? fileObj.type.split(';')[0].trim().toLowerCase() : '';
+            if (raw === 'audio/x-m4a' || raw === 'audio/m4a') return 'audio/mp4';
+            if (raw && raw !== 'application/octet-stream') return raw;
+
+            const name = (fileObj && fileObj.name) ? fileObj.name.toLowerCase() : '';
+            if (name.endsWith('.m4a') || name.endsWith('.mp4')) return 'audio/mp4';
+            if (name.endsWith('.mp3')) return 'audio/mp3';
+            if (name.endsWith('.wav')) return 'audio/wav';
+            if (name.endsWith('.aac')) return 'audio/aac';
+            if (name.endsWith('.ogg')) return 'audio/ogg';
+            if (name.endsWith('.webm')) return 'audio/webm';
+            if (name.endsWith('.flac')) return 'audio/flac';
+            return 'audio/mp3';
+        }
+
+        async function waitForFileActive(apiKey, fileObj, setProgress) {
+            if (!fileObj || !fileObj.name) return;
+            if (!fileObj.state || fileObj.state === 'ACTIVE') return;
+            if (fileObj.state === 'FAILED') {
+                throw new Error('アップロードした音声ファイルの処理に失敗しました。');
+            }
+            for (let i = 0; i < 30; i++) {
+                if (setProgress) {
+                    setProgress('① アップロード音声をAI解析用に準備中...', 58);
+                }
+                await sleep(2000);
+                const statusRes = await fetchWithTimeout(
+                    `https://generativelanguage.googleapis.com/v1beta/${fileObj.name}?key=${apiKey}`,
+                    { method: 'GET' },
+                    15000
+                );
+                if (!statusRes.ok) continue;
+                const statusJson = await statusRes.json().catch(() => ({}));
+                if (statusJson.state === 'ACTIVE') return;
+                if (statusJson.state === 'FAILED') {
+                    throw new Error('Google側での音声ファイル変換に失敗しました。別の音声形式でお試しください。');
+                }
+            }
+            throw new Error('音声ファイルの処理準備がタイムアウトしました。');
+        }
+
         function isRetryableStatusOrMessage(status, message) {
             if ([429, 500, 502, 503, 504].includes(status)) return true;
             const lower = String(message || '').toLowerCase();
@@ -1380,7 +1437,7 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
 
                 for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
                     try {
-                        const res = await fetch(
+                        const res = await fetchWithTimeout(
                             `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
                             {
                                 method: 'POST',
@@ -1393,7 +1450,8 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
                                         responseSchema: responseSchema
                                     }
                                 })
-                            }
+                            },
+                            120000
                         );
 
                         let json = null;
@@ -1454,12 +1512,12 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
         async function generateViaDirectGemini(apiKey, modelName, prompt, responseSchema, audioFile, setProgress) {
             let fileUri = null;
             let fileNameToCleanUp = null;
-            const mimeType = (audioFile && audioFile.type) ? audioFile.type.split(';')[0] : 'audio/mp3';
+            const mimeType = audioFile ? resolveAudioMimeType(audioFile) : 'audio/mp3';
 
             try {
                 if (audioFile) {
                     setProgress('① 音声データを高速アップロード中...', 28);
-                    const startRes = await fetch(
+                    const startRes = await fetchWithTimeout(
                         `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
                         {
                             method: 'POST',
@@ -1471,7 +1529,8 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({ file: { display_name: audioFile.name || 'meeting_audio' } })
-                        }
+                        },
+                        25000
                     );
 
                     if (!startRes.ok) {
@@ -1486,14 +1545,14 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
 
                     setProgress('① 音声バイナリを直接転送中...', 48);
                     // ※ Content-Length はブラウザが自動付与するため手動指定しない
-                    const uploadRes = await fetch(uploadUrl, {
+                    const uploadRes = await fetchWithTimeout(uploadUrl, {
                         method: 'POST',
                         headers: {
                             'X-Goog-Upload-Offset': '0',
                             'X-Goog-Upload-Command': 'upload, finalize'
                         },
                         body: audioFile
-                    });
+                    }, 180000);
 
                     if (!uploadRes.ok) {
                         const errTxt = await uploadRes.text().catch(() => '');
@@ -1504,6 +1563,8 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
                     if (uploadJson.error) throw new Error(uploadJson.error.message);
                     fileUri = uploadJson.file.uri;
                     fileNameToCleanUp = uploadJson.file.name;
+
+                    await waitForFileActive(apiKey, uploadJson.file, setProgress);
                 }
 
                 setProgress('② Gemini 3.6 Flash が議事録を解析・生成中...', 72);
@@ -1580,12 +1641,12 @@ ${inputText ? inputText : '（テキスト入力なし。音声データを優�
                     );
                 } else {
                     // 2. Vercel環境変数が未設定の場合は GAS バックエンドへ自動フォールバック
-                    setProgress('GAS経由でAI解析を実行中...', 50);
+                    setProgress('GAS経由でAI解析を実行中（環境変数未検出）...', 50);
                     let audioData = null;
                     if (selectedAudioFile) {
                         const base64Str = await fileToBase64(selectedAudioFile);
                         audioData = {
-                            mimeType: (selectedAudioFile.type || 'audio/mp3').split(';')[0],
+                            mimeType: resolveAudioMimeType(selectedAudioFile),
                             base64: base64Str
                         };
                     }
